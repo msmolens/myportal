@@ -26,3 +26,12 @@ ul {
   list-style-type: disc;
   list-style-image: none;
 }
+
+.screenshot {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.screenshot > img {
+  border: 1px dashed #9999FF;
+}

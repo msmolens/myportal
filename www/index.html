@@ -1,39 +1,96 @@
+<link rel="stylesheet" type="text/css" href="project.css"/>
 
-<!-- ***************** INFO/NEWS *************** -->
 <div id="infoTabs">
 <div class="infoTab" id="whats-new">
 <h5 class="infoHeader">What's New</h5>
 <ul>
-<li>News item goes here</li>
-<li>More news items go here</li>
-<li><a href="http://www.mozdev.org/">mozdev.org</a></li>
+<li><a href="https://addons.mozilla.org/extensions/moreinfo.php?id=1217">Version 1.0</a></li>
 </ul>
 </div>
-
-<div class="infoTab" id="other-stuff">
-<h5 class="infoHeader">Other Stuff</h5>
-<ul>
-<li>stuff goes here</li>
-<li>more stuff goes here</li>
-</ul>
 </div>
-
-<!-- alternative image/table base tab works better in NS4 -->
-<!--
-<div class="infoTab" id="whats-new-image">
-<h5 class="infoHeader"><img src="http://www.mozdev.org/sharedimages/whatsnew_top.gif" width="154" alt="What's New"></h5>
-<div class="infoItems">
-<div>News item goes here</div>
-<div>More news item goes here</div>
-<div><a href="http://mozdev.org/">mozdev.org</a></div>
-</div>
-</div>
--->
-</div>
-<!-- ***************** INFO/NEWS *************** -->
 
 <!-- MAIN CONTENT -->
-<p>The <strong>myportal</strong> project content goes here.</p>
 
-<p><strong>Note:</strong> If you want to add an area for user feedback to any of your pages, take a look at the <a href="notes.html">notes.html</a>
-template.</p>
+<div class="myportalHeader">My Portal</div>
+
+My Portal is Firefox extension that creates a live web page of your
+bookmark hierarchy.  Leave My Portal open in a tab to easily browse,
+search, and open your bookmarks.
+
+<div class="screenshot">
+<img src="myportal.png"/>
+</div>
+
+<div class="myportalHeader">Basics</div>
+
+Access My Portal through the <span class="menu">Tools &gt; My
+Portal</span> menu or by browsing to <a
+href="myportal://">myportal://</a>.  Change the root folder by
+clicking on a folder's name.  Open directly to a specific folder by
+bookmarking the folder's myportal:// URL.
+
+<p/>
+
+Like on normal web pages, left-clicking a link on My Portal opens the
+link in the same tab, and middle-clicking a link opens the link in a
+new tab.  Right-clicking a folder name displays a popup menu with
+options to open the folder's contents in a new windows or tabs.
+
+<p/>
+
+My Portal distinguishes bookmarks that have been visited within the
+past week by displaying them in a larger font.
+
+<p/>
+
+Changes to bookmarks are reflected immediately&mdash;it is unnecessary
+to reload My Portal.
+
+<div class="myportalHeader">Live Bookmarks</div>
+
+Icons next to the folder name distinguish <a
+href="http://www.mozilla.org/products/firefox/live-bookmarks">live
+bookmarks</a> from normal folders.  Click the check mark icon to mark
+the live bookmark's contents as read.  Live bookmarks reload
+automatically, but clicking the reload icon forces the live bookmark
+to reload immediately.  Right-click on a live bookmark's name to see a
+popup menu with more actions.
+
+<div class="screenshot">
+<img src="livebookmark.png"/>
+</div>
+
+<div class="myportalHeader">Quick Searches</div>
+
+Quick searches appear as a textbox and a submit button.  To search,
+type a search term in the textbox and then either press enter or click
+the submit button.  Shift-click the submit button to open the search
+in a new window.  Middle-click the submit button to open the search in
+a new tab.
+
+<div class="screenshot">
+<img src="quicksearches.png"/>
+</div>
+
+<div class="myportalHeader">Bookmark Editing</div>
+
+Edit a bookmark's properties by right-clicking the bookmark and
+selecting <span class="menu">Properties</span> from the popup menu.
+
+<div class="myportalHeader">Customization</div>
+
+Customize My Portal's appearance and behavior by double-clicking its
+entry in the Extensions window.
+
+<div class="myportalHeader">Browser Support</div>
+Firefox 1.5 Beta
+
+<div class="myportalHeader">Translations</div>
+<ul>
+  <li>en-US</li>
+</ul>
+
+<div class="myportalHeader">Acknowledgements</div>
+
+This extension was inspired by the My Portal feature in the <a
+href="http://galeon.sourceforge.net/">Galeon</a> web browser.
