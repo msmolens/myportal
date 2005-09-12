@@ -1,6 +1,7 @@
 @import url("http://www.mozdev.org/project.css");
 
 .myportalHeader {
+  font-family: sans-serif;
   font-size: larger;
   font-weight: bold;
   margin-top: 1em;
