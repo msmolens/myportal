@@ -1,0 +1,110 @@
+/* My Portal CSS Template */
+
+/* Document body */
+body {
+}
+
+/* Footer */
+/* NOTE: footer's class is folderHeading to match color */
+#footer {
+}
+
+/* Logo */
+#myportalLogo, #myportalLogoLink {
+}
+
+/* Image */
+#myportalImage {
+}
+
+/* Folder */
+.folder {
+}
+
+/* First folder */
+#myportalBody > .folder {
+}
+
+/* Folder Heading */
+.folderHeading {
+}
+
+/* Livemark Folder Heading */
+.livemarkFolderHeading {
+}
+
+/* Folder Heading Links */
+.folderHeadingLink:link,
+.folderHeadingLink:visited {
+}
+.folderHeadingLink:hover {
+}
+
+/* Folder Contents */
+.folderContents {
+}
+
+/* Bookmark Links */
+a:link,
+a:visited {
+}
+
+.visitedPastDay {
+}
+.visitedPastTwoDays {
+}
+.visitedPastThreeDays {
+}
+.visitedPastWeek {
+}
+
+/* Livemark links */
+.livemarkLink:visited {
+}
+.livemarkLink:hover {
+}
+
+/* Livemark icons */
+.livemarkMarkAsReadButton,
+.livemarkRefreshButton {
+}
+
+/* Bookmark separator (div) */
+.bookmarkSeparator {
+}
+
+/* Smart bookmark hbox */
+.smartbookmark {
+}
+
+/* Smart bookmark form */
+form {
+}
+
+/* Smart bookmark textbox */
+.textbox {
+}
+
+/* Smart bookmark button text */
+.button-text {
+}
+
+/* Empty folder note */
+.emptyFolderNote {
+}
+
+/* Error message */
+.errorMessage {
+}
+
+/* Error message title */
+.errorMessageTitle {
+}
+
+/* Error message description */
+.errorMessageDescription {
+}
+
+/* Error message icon */
+.errorMessageIcon {
+}

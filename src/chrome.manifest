@@ -1,0 +1,4 @@
+content myportal content/
+overlay chrome://browser/content/browser.xul chrome://myportal/content/myportalOverlay.xul
+locale myportal en-US locale/en-US/
+skin myportal classic/1.0 skin/classic/

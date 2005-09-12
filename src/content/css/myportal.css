@@ -1,0 +1,217 @@
+/* myportal.css
+ * Copyright (C) 2005 Max Smolens
+ *
+ * This file is part of My Portal.
+ *
+ * My Portal is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * My Portal is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with My Portal; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ */
+
+/* Document body */
+body {
+  font-size: 11pt;
+  font-family: "Bitstream Vera Sans", Arial, Helvetica, sans-serif;
+  margin: 0px;
+  margin-top: 20px;
+  line-height: 1.7em;
+  background-image: url('chrome://myportal/skin/gradient.png');
+  background-repeat: repeat-x;
+}
+
+/* Footer */
+/* NOTE: footer's class is folderHeading to match color */
+#footer {
+  margin: 30px auto 25px auto;
+  height: 0px;
+  width: 40%;
+  display: block;
+  -moz-border-radius: 10px;
+}
+
+/* Logo */
+#myportalLogo, #myportalLogoLink {
+  border: 0px;
+  margin-left: 6px;
+  margin-bottom: 1em;
+}
+
+/* Image */
+#myportalImage {
+  visibility: hidden;
+  float: right;
+  margin: 25px 20px 10px 25px;
+}
+
+/* Folder */
+.folder {
+  margin: 1em 0px 0px 2em;
+}
+
+/* First folder */
+#myportalBody > .folder {
+  margin-left: 1em;
+}
+
+/* Folder Heading */
+.folderHeading {
+  display: inline;
+  padding: 2px 1.0em;
+  font-size: 120%;
+  -moz-border-radius: 3px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* Livemark Folder Heading */
+.livemarkFolderHeading {
+  padding-right: 0.5em;
+}
+
+/* Folder Heading Links */
+.folderHeadingLink:link,
+.folderHeadingLink:visited {
+  border-bottom: 0px;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+}
+.folderHeadingLink:hover {
+  text-decoration: underline;
+}
+
+/* Folder Contents */
+.folderContents {
+  margin: 1em 0em 1em 1em;
+}
+
+/* Bookmark Links */
+a:link,
+a:visited {
+  white-space: pre;
+  text-decoration: none;
+  margin-right: 1em;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+.visitedPastDay {
+  font-size: 150%;
+}
+.visitedPastTwoDays {
+  font-size: 140%;
+}
+.visitedPastThreeDays {
+  font-size: 130%;
+}
+.visitedPastWeek {
+  font-size: 115%;
+}
+
+/* Livemark links */
+.livemarkLink:visited {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+.livemarkLink:hover {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+/* Livemark icons */
+.livemarkMarkAsReadButton,
+.livemarkRefreshButton {
+  border: 0px;
+  padding: 0px;
+  background: transparent;
+  list-style-image: url('chrome://myportal/skin/livemarks.png');
+  vertical-align: middle;
+}
+.livemarkMarkAsReadButton {
+  -moz-image-region: rect(16px 32px 32px 16px);
+}
+.livemarkRefreshButton {
+  -moz-image-region: rect(16px 16px 32px 0px);
+}
+.livemarkMarkAsReadButton:hover {
+  -moz-image-region: rect(0px 32px 16px 16px);
+}
+.livemarkRefreshButton:hover {
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+.livemarkMarkAsReadButton[disabled=true] {
+  -moz-image-region: rect(32px 32px 48px 16px);
+}
+.livemarkRefreshButton[disabled=true] {
+  -moz-image-region: rect(32px 16px 48px 0px);
+}
+
+/* Bookmark separator (div) */
+.bookmarkSeparator {
+  height: 1em;
+}
+
+/* Smart bookmark hbox */
+.smartbookmark {
+  white-space: nowrap;
+  margin: 0px;
+  padding: 5px 0px 2px 2px;
+ -moz-box-align: center;
+}
+
+/* Smart bookmark form */
+form {
+  margin: 0px;
+}
+
+/* Smart bookmark textbox */
+.textbox {
+  padding: 2px 0px 1px 2px;
+  -moz-appearance: textfield;
+  border-width: 1px;
+  border-style: inset;
+}
+
+/* Smart bookmark button text */
+.button-text {
+  padding: 0px 4px 0px 4px;
+}
+
+/* Empty folder note */
+.emptyFolderNote {
+  font-style: italic;
+}
+
+/* Error message */
+.errorMessage {
+  position: relative;
+  left: 64px;
+}
+
+/* Error message title */
+.errorMessageTitle {
+  font-size: large;
+  font-weight: bold;
+}
+
+/* Error message description */
+.errorMessageDescription {
+}
+
+/* Error message icon */
+.errorMessageIcon {
+  position: absolute;
+  left: 16px;
+  width: 64px;
+  list-style-image: url('chrome://myportal/skin/error.png');
+}

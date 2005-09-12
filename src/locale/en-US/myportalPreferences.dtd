@@ -1,0 +1,59 @@
+<!-- PREFERENCES DIALOG -->
+
+<!-- Title -->
+<!ENTITY title "&name; Preferences">
+
+<!-- Panes -->
+<!ENTITY tab.appearance "Appearance">
+<!ENTITY tab.behavior "Behavior">
+
+<!-- Categories -->
+<!ENTITY category.folderColors "Folder Colors">
+<!ENTITY category.images "Images">
+<!ENTITY category.customStyleSheet "Custom Style Sheet">
+<!ENTITY category.portalUpdates "&name; Updates">
+<!ENTITY category.bookmarks "Bookmarks">
+<!ENTITY category.livemarks "Live Bookmarks">
+<!ENTITY category.openFolder "Open Folder in Windows or Tabs">
+
+<!-- Labels and Access Keys-->
+<!ENTITY matchSystemTheme "Use system colors">
+<!ENTITY matchSystemTheme.accesskey "c">
+<!ENTITY folderHeadingTextColorLabel "Text:">
+<!ENTITY folderHeadingTextColorLabel.accesskey "t">
+<!ENTITY folderHeadingBackgroundColorLabel "Background:">
+<!ENTITY folderHeadingBackgroundColorLabel.accesskey "B">
+<!ENTITY displayLogo "Display &name; logo">
+<!ENTITY displayLogo.accesskey "l">
+<!ENTITY displayImage "Display image">
+<!ENTITY displayImage.accesskey "i">
+<!ENTITY displayImageButton "Browse...">
+<!ENTITY displayImageButton.accesskey "r">
+<!ENTITY useCustomStyleSheet "Use custom style sheet">
+<!ENTITY useCustomStyleSheet.accesskey "s">
+<!ENTITY useCustomStyleSheetButton "Browse...">
+<!ENTITY useCustomStyleSheetButton.accesskey "o">
+<!ENTITY useCustomStyleSheet.template.description "View Template">
+<!ENTITY useCustomStyleSheet.template.url "chrome://myportal/content/css/template.css">
+<!ENTITY automaticallyUpdatePortal "Automatically update &name; when bookmarks change">
+<!ENTITY automaticallyUpdatePortal.accesskey "u">
+<!ENTITY openLinksNewTabOrWindow "Open in new tab or window">
+<!ENTITY openLinksNewTabOrWindow.accesskey "w">
+<!ENTITY showDescriptionTooltips "Show descriptions in tooltips">
+<!ENTITY showDescriptionTooltips.accesskey "p">
+<!ENTITY increaseRecentlyVisitedSize "Increase font size if recently visited">
+<!ENTITY increaseRecentlyVisitedSize.accesskey "f">
+<!ENTITY truncateBookmarkNames "Truncate names longer than">
+<!ENTITY truncateBookmarkNames.accesskey "n">
+<!ENTITY truncateBookmarkNamesLengthUnits "characters">
+<!ENTITY truncateBookmarkNamesLengthUnits.accesskey "h">
+<!ENTITY animateLivemarkRefresh "Animate when reloaded">
+<!ENTITY animateLivemarkRefresh.accesskey "a">
+<!ENTITY openFolderConfirm "Confirm when contains at least">
+<!ENTITY openFolderConfirm.accesskey "m">
+<!ENTITY openFolderConfirmUnits "bookmarks">
+<!ENTITY openFolderConfirmUnits.accesskey "k">
+
+<!-- Buttons -->
+<!ENTITY button.defaults "Defaults">
+<!ENTITY button.defaults.accesskey "d">

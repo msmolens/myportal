@@ -1,0 +1,42 @@
+/* nsIMyPortalService.idl
+ * Copyright (C) 2005 Max Smolens
+ *
+ * This file is part of My Portal.
+ *
+ * My Portal is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * My Portal is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with My Portal; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMNode;
+
+[scriptable, uuid(19d258c7-dd37-4cea-8452-ce0507f4c4d4)]
+interface nsIMyPortalService: nsISupports
+{
+        string createDOMBookmarksTree(in nsIDOMNode parentNode,
+                                      in string nodeId);
+        nsIDOMNode updateDOMNode(in nsIDOMNode node,
+                                 in string nodeId,
+                                 in boolean isPortalRoot);
+        void updateVisitedLinks(in PRUint32 count,
+                                [array, size_is(count)] in nsIDOMNode links);
+        void markLivemarkAsRead(in string nodeId);
+        void markLivemarkAsUnread(in string nodeId);
+        void refreshLivemark(in string nodeId);
+        string getIdForPath(in string bookmarksPath);
+        string getHrefForId(in string nodeId);
+        void addURL(in string url);
+};

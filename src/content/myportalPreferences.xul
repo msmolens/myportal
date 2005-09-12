@@ -1,0 +1,314 @@
+<?xml version="1.0"?>
+
+<!--
+myportalPreferences.xul
+Copyright (C) 2005 Max Smolens
+
+This file is part of My Portal.
+
+My Portal is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
+
+My Portal is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with My Portal; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+-->
+
+<!DOCTYPE prefwindow [
+<!ENTITY % myportalDTD SYSTEM "chrome://myportal/locale/myportal.dtd">
+%myportalDTD;
+<!ENTITY % preferencesDTD SYSTEM "chrome://myportal/locale/myportalPreferences.dtd">
+%preferencesDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://myportal/skin/preferences.css" type="text/css"?>
+
+<prefwindow id="myportalPreferences"
+            type="prefwindow"
+            title="&title;"
+            buttons="accept,cancel,extra1"
+            buttonlabelextra1="&button.defaults;"
+            buttonaccesskeyextra1="&button.defaults.accesskey;"
+            ondialogextra1="myportalPreferences.loadDefaults();"
+            onload="myportalPreferences.init();"
+            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- Appearance Pane -->
+  <prefpane id="appearancePane"
+            label="&tab.appearance;">
+
+    <preferences>
+
+      <!-- Folder Colors -->
+      <preference id="matchSystemTheme"
+                  name="myportal.matchSystemTheme"
+                  type="bool"
+                  instantApply="true"/>
+      <preference id="folderHeadingTextColor"
+                  name="myportal.folderHeadingTextColor"
+                  type="string"
+                  instantApply="true"/>
+      <preference id="folderHeadingBackgroundColor"
+                  name="myportal.folderHeadingBackgroundColor"
+                  type="string"
+                  instantApply="true"/>
+
+      <!-- Images -->
+      <preference id="displayLogo"
+                  name="myportal.displayLogo"
+                  type="bool"
+                  instantApply="true"/>
+      <preference id="displayImage"
+                  name="myportal.displayImage"
+                  type="bool"
+                  instantApply="true"/>
+      <preference id="imageFilename"
+                  name="myportal.imageFilename"
+                  type="string"
+                  instantApply="true"/>
+
+      <!-- Custom Style Sheet  -->
+      <preference id="useCustomStyleSheet"
+                  name="myportal.useCustomStyleSheet"
+                  type="bool"
+                  instantApply="true"/>
+      <preference id="customStyleSheetFilename"
+                  name="myportal.customStyleSheetFilename"
+                  type="string"
+                  instantApply="true"/>
+
+    </preferences>
+
+    <script type="application/x-javascript" src="chrome://myportal/content/myportalPreferences.js"/>
+
+    <!-- Folder Colors -->
+    <groupbox>
+      <caption label="&category.folderColors;"/>
+      <grid>
+        <columns>
+          <column flex="1"/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <checkbox id="matchSystemThemeCheckbox"
+                    preference="matchSystemTheme"
+                    label="&matchSystemTheme;"
+                    accesskey="&matchSystemTheme.accesskey;"
+                    onsyncfrompreference="return myportalPreferences.updateDisabled('matchSystemTheme', 'folderHeadingTextColorLabel, folderHeadingBackgroundColorLabel, folderHeadingTextColorPicker, folderHeadingBackgroundColorPicker', true);"
+                    onsynctopreference="return myportalPreferences.updateDisabled('matchSystemTheme', 'folderHeadingTextColorLabel, folderHeadingBackgroundColorLabel, folderHeadingTextColorPicker, folderHeadingBackgroundColorPicker', true);"/>
+
+          <row align="center">
+            <label id="folderHeadingTextColorLabel"
+                   value="&folderHeadingTextColorLabel;"
+                   accesskey="&folderHeadingTextColorLabel.accesskey;"
+                   control="folderHeadingTextColorPicker"/>
+            <hbox align="center">
+              <colorpicker id="folderHeadingTextColorPicker"
+                           preference="folderHeadingTextColor"
+                           type="button"
+                           palettename="standard"
+                           instantApply="true"/>
+            </hbox>
+          </row>
+          <row align="center">
+            <label id="folderHeadingBackgroundColorLabel"
+                   value="&folderHeadingBackgroundColorLabel;"
+                   accesskey="&folderHeadingBackgroundColorLabel.accesskey;"
+                   control="folderHeadingBackgroundColorPicker"/>
+            <hbox align="center">
+              <colorpicker id="folderHeadingBackgroundColorPicker"
+                           preference="folderHeadingBackgroundColor"
+                           type="button"
+                           palettename="standard"
+                           instantApply="true"/>
+            </hbox>
+          </row>
+        </rows>
+      </grid>
+    </groupbox>
+
+    <!-- Images -->
+    <groupbox>
+      <caption label="&category.images;"/>
+      <checkbox id="displayLogoCheckbox"
+                preference="displayLogo"
+                label="&displayLogo;"
+                accesskey="&displayLogo.accesskey;"/>
+      <checkbox id="displayImageCheckbox"
+                preference="displayImage"
+                label="&displayImage;"
+                accesskey="&displayImage.accesskey;"
+                onsyncfrompreference="return myportalPreferences.updateDisabled('displayImage', 'imageFilenameTextbox, displayImageButton');"
+                onsynctopreference="return myportalPreferences.updateDisabled('displayImage', 'imageFilenameTextbox, displayImageButton');"/>
+      <hbox>
+        <spacer width="23"/>
+        <textbox id="imageFilenameTextbox"
+                 preference="imageFilename"
+                 flex="1"/>
+        <button id="displayImageButton"
+                label="&displayImageButton;"
+                accesskey="&displayImageButton.accesskey;"
+                oncommand="myportalPreferences.browseCustomImage(event);"/>
+      </hbox>
+    </groupbox>
+
+    <!-- Custom Style Sheet  -->
+    <groupbox>
+      <caption label="&category.customStyleSheet;"/>
+      <hbox align="center">
+      <checkbox id="useCustomStyleSheetCheckbox"
+                preference="useCustomStyleSheet"
+                label="&useCustomStyleSheet;"
+                accesskey="&useCustomStyleSheet.accesskey;"
+                onsyncfrompreference="return myportalPreferences.updateDisabled('useCustomStyleSheet', 'customStyleSheetFilenameTextbox, useCustomStyleSheetButton');"
+                onsynctopreference="return myportalPreferences.updateDisabled('useCustomStyleSheet', 'customStyleSheetFilenameTextbox, useCustomStyleSheetButton');"
+                flex="1"/>
+      <label value="&useCustomStyleSheet.template.description;"
+             href="&useCustomStyleSheet.template.url;"
+             class="text-link"/>
+      </hbox>
+      <hbox align="center">
+        <spacer width="23"/>
+        <textbox id="customStyleSheetFilenameTextbox"
+                 preference="customStyleSheetFilename"
+                 flex="1"/>
+        <button id="useCustomStyleSheetButton"
+                label="&useCustomStyleSheetButton;"
+                accesskey="&useCustomStyleSheetButton.accesskey;"
+                oncommand="myportalPreferences.browseCustomStyleSheet(event);"/>
+      </hbox>
+    </groupbox>
+
+  </prefpane>
+
+  <!-- Behavior Pane -->
+  <prefpane id="behaviorPane"
+            label="&tab.behavior;">
+
+    <preferences>
+
+      <!-- My Portal Updates -->
+      <preference id="automaticallyUpdatePortal"
+                  name="myportal.automaticallyUpdatePortal"
+                  type="bool"/>
+
+      <!-- Bookmarks -->
+      <preference id="openLinksNewTabOrWindow"
+                  name="myportal.openLinksNewTabOrWindow"
+                  type="bool"
+                  instantApply="false"/>
+      <preference id="showDescriptionTooltips"
+                  name="myportal.showDescriptionTooltips"
+                  type="bool"
+                  instantApply="false"/>
+      <preference id="increaseRecentlyVisitedSize"
+                  name="myportal.increaseRecentlyVisitedSize"
+                  type="bool"
+                  instantApply="false"/>
+      <preference id="truncateBookmarkNames"
+                  name="myportal.truncateBookmarkNames"
+                  type="bool"
+                  instantApply="false"/>
+      <preference id="truncateBookmarkNamesLength"
+                  name="myportal.truncateBookmarkNamesLength"
+                  type="int"
+                  instantApply="false"/>
+
+      <!-- Live Bookmarks  -->
+      <preference id="animateLivemarkRefresh"
+                  name="myportal.animateLivemarkRefresh"
+                  type="bool"/>
+
+      <!-- Open Folder in Windows or Tabs -->
+      <preference id="openFolderConfirm"
+                  name="myportal.openFolderConfirm"
+                  type="bool"/>
+      <preference id="openFolderLimit"
+                  name="myportal.openFolderLimit"
+                  type="int"/>
+
+    </preferences>
+
+    <!-- My Portal Updates -->
+    <groupbox>
+      <caption label="&category.portalUpdates;"/>
+      <checkbox id="automaticallyUpdatePortalCheckbox"
+                preference="automaticallyUpdatePortal"
+                label="&automaticallyUpdatePortal;"
+                accesskey="&automaticallyUpdatePortal.accesskey;"/>
+    </groupbox>
+
+    <!-- Bookmarks -->
+    <groupbox>
+      <caption label="&category.bookmarks;"/>
+      <checkbox id="openLinksNewTabOrWindowCheckbox"
+                preference="openLinksNewTabOrWindow"
+                label="&openLinksNewTabOrWindow;"
+                accesskey="&openLinksNewTabOrWindow.accesskey;"/>
+      <checkbox id="showDescriptionTooltipsCheckbox"
+                preference="showDescriptionTooltips"
+                label="&showDescriptionTooltips;"
+                accesskey="&showDescriptionTooltips.accesskey;"/>
+      <checkbox id="increaseRecentlyVisitedSizeCheckbox"
+                preference="increaseRecentlyVisitedSize"
+                label="&increaseRecentlyVisitedSize;"
+                accesskey="&increaseRecentlyVisitedSize.accesskey;"/>
+      <hbox align="center">
+        <checkbox id="truncateBookmarkNamesCheckbox"
+                  preference="truncateBookmarkNames"
+                  label="&truncateBookmarkNames;"
+                  accesskey="&truncateBookmarkNames.accesskey;"
+                  onsyncfrompreference="return myportalPreferences.updateDisabled('truncateBookmarkNames', 'truncateBookmarkNamesLengthTextbox');"
+                  onsynctopreference="return myportalPreferences.updateDisabled('truncateBookmarkNames', 'truncateBookmarkNamesLengthTextbox');"/>
+        <textbox id="truncateBookmarkNamesLengthTextbox"
+                 preference="truncateBookmarkNamesLength"
+                 size="2"
+                 onsynctopreference="return myportalPreferences.verifyLimit('truncateBookmarkNamesLengthTextbox');"/>
+        <label id="truncateBookmarkNamesLengthLabel"
+               value="&truncateBookmarkNamesLengthUnits;"
+               accesskey="&truncateBookmarkNamesLengthUnits.accesskey;"
+               control="truncateBookmarkNamesLengthTextbox"/>
+      </hbox>
+    </groupbox>
+
+    <!-- Live Bookmarks  -->
+    <groupbox>
+      <caption label="&category.livemarks;"/>
+      <checkbox id="animateLivemarkRefreshCheckbox"
+                preference="animateLivemarkRefresh"
+                label="&animateLivemarkRefresh;"
+                accesskey="&animateLivemarkRefresh.accesskey;"/>
+    </groupbox>
+
+    <!-- Open Folder in Windows or Tabs -->
+    <groupbox>
+      <caption label="&category.openFolder;"/>
+      <hbox align="center">
+        <checkbox id="openFolderConfirmCheckbox"
+                  preference="openFolderConfirm"
+                  label="&openFolderConfirm;"
+                  accesskey="&openFolderConfirm.accesskey;"
+                  onsyncfrompreference="myportalPreferences.updateDisabled('openFolderConfirm', 'openFolderLimitTextbox');"
+                  onsynctopreference="myportalPreferences.updateDisabled('openFolderConfirm', 'openFolderLimitTextbox');"/>
+        <textbox id="openFolderLimitTextbox"
+                 preference="openFolderLimit"
+                 size="2"
+                 onsynctopreference="return myportalPreferences.verifyLimit('openFolderLimitTextbox');"/>
+        <label id="openFolderLimitLabel"
+               value="&openFolderConfirmUnits;"
+               accesskey="&openFolderConfirmUnits.accesskey;"
+               control="openFolderLimitTextbox"/>
+      </hbox>
+    </groupbox>
+
+  </prefpane>
+
+</prefwindow>

@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+
+<!--
+myportalOverlay.xul
+Copyright (C) 2005 Max Smolens
+
+This file is part of My Portal.
+
+My Portal is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; either version 2 of the License, or (at your
+option) any later version.
+
+My Portal is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with My Portal; if not, write to the Free Software Foundation,
+Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+-->
+
+<!DOCTYPE overlay [
+<!ENTITY % myportalDTD SYSTEM "chrome://myportal/locale/myportal.dtd">
+%myportalDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
+]>
+
+<overlay id="myportalOverlay"
+             xmlns:html="http://www.w3.org/1999/xhtml"
+             xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://myportal/content/myportalWindowEvents.js"/>
+  <script type="application/x-javascript" src="chrome://myportal/content/myportalLinkExtractors.js"/>
+  <script type="application/x-javascript" src="chrome://myportal/content/myportalLinkOpeners.js"/>
+  <script type="application/x-javascript" src="chrome://myportal/content/myportalFolderOpener.js"/>
+
+  <!-- Commands -->
+  <commandset id="mainCommandSet">
+    <command id="Tools:MyPortal"
+             oncommand="getBrowser().contentDocument.location.href='myportal://';"/>
+    <command id="cmd_myportalOpenFolderInWindows"
+             oncommand="try {myportalWindowEvents.openFolderInWindows(document.popupNode);} catch (e) {}"/>
+    <command id="cmd_myportalOpenFolderInTabs"
+             oncommand="try {myportalWindowEvents.openFolderInTabs(document.popupNode);} catch (e) {}"/>
+    <command id="cmd_myportalOpenUnreadInWindows"
+             oncommand="try {myportalWindowEvents.openUnreadInWindows(document.popupNode);} catch (e) {}"/>
+    <command id="cmd_myportalOpenUnreadInTabs"
+             oncommand="try {myportalWindowEvents.openUnreadInTabs(document.popupNode);} catch (e) {}"/>
+    <command id="cmd_myportalLivemarkMarkAsRead"
+             oncommand="try {myportalWindowEvents.markLivemarkAsRead(document.popupNode);} catch (e) {}"/>
+    <command id="cmd_myportalLivemarkMarkAsUnread"
+             oncommand="try {myportalWindowEvents.markLivemarkAsUnread(document.popupNode);} catch (e) {}"/>
+    <command id="cmd_myportalLivemarkRefresh"
+             oncommand="try {myportalWindowEvents.refreshLivemark(document.popupNode);} catch (e) {}"/>
+    <command id="cmd_myportalBookmarkProperties"
+             oncommand="try {myportalWindowEvents.openBookmarkProperties(document.popupNode);} catch (e) {}"/>
+  </commandset>
+
+  <!-- Tools menu -->
+  <menupopup id="menu_ToolsPopup">
+    <menuitem id="myportalMenuItem"
+              class="menuitem-iconic"
+              label="&name;"
+              accesskey="&name.accesskey;"
+              command="Tools:MyPortal"
+              position="1"/>
+  </menupopup>
+
+  <!-- Context menu -->
+  <popup id="contentAreaContextMenu">
+    <menuitem id="myportalOpenFolderInWindows"
+              label="&openFolderInWindows;"
+              accesskey="&openFolderInWindows.accesskey;"
+              command="cmd_myportalOpenFolderInWindows"
+              hidden="true"
+              insertbefore="context-sep-open"/>
+    <menuitem id="myportalOpenFolderInTabs"
+              label="&openFolderInTabs;"
+              accesskey="&openFolderInTabs.accesskey;"
+              command="cmd_myportalOpenFolderInTabs"
+              hidden="true"
+              insertbefore="context-sep-open"/>
+    <menuitem id="myportalOpenUnreadInWindows"
+              label="&openUnreadInWindows;"
+              accesskey="&openUnreadInWindows.accesskey;"
+              command="cmd_myportalOpenUnreadInWindows"
+              hidden="true"
+              insertbefore="context-sep-open"/>
+    <menuitem id="myportalOpenUnreadInTabs"
+              label="&openUnreadInTabs;"
+              accesskey="&openUnreadInTabs.accesskey;"
+              command="cmd_myportalOpenUnreadInTabs"
+              hidden="true"
+              insertbefore="context-sep-open"/>
+    <menuseparator id="myportalLivemarkSeparator"
+                   hidden="true"
+                   insertbefore="context-sep-properties"/>
+    <menuitem id="myportalLivemarkMarkAsRead"
+              label="&livemark.markAsRead;"
+              accesskey="&livemark.markAsRead.accesskey;"
+              command="cmd_myportalLivemarkMarkAsRead"
+              hidden="true"
+              insertbefore="context-sep-properties"/>
+    <menuitem id="myportalLivemarkMarkAsUnread"
+              label="&livemark.markAsUnread;"
+              accesskey="&livemark.markAsUnread.accesskey;"
+              command="cmd_myportalLivemarkMarkAsUnread"
+              hidden="true"
+              insertbefore="context-sep-properties"/>
+    <menuitem id="myportalLivemarkRefresh"
+              label="&livemark.refresh;"
+              accesskey="&livemark.refresh.accesskey;"
+              command="cmd_myportalLivemarkRefresh"
+              hidden="true"
+              insertbefore="context-sep-properties"/>
+    <menuitem id="myportalBookmarkProperties"
+              label="&metadataCmd.label;"
+              accesskey="&metadataCmd.accesskey;"
+              command="cmd_myportalBookmarkProperties"
+              hidden="true"
+              insertafter="context-sep-properties"/>
+  </popup>
+
+</overlay>

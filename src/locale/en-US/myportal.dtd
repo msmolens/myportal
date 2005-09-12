@@ -1,0 +1,25 @@
+<!-- TOOLS MENU -->
+
+<!ENTITY name "My Portal">
+<!ENTITY name.accesskey "P">
+
+
+<!-- POPUP MENU -->
+
+<!-- Open Folder menu items -->
+<!ENTITY openFolderInWindows "Open Folder in Windows">
+<!ENTITY openFolderInWindows.accesskey "W">
+<!ENTITY openFolderInTabs "Open Folder in Tabs">
+<!ENTITY openFolderInTabs.accesskey "T">
+<!ENTITY openUnreadInWindows "Open Unread Items in Windows">
+<!ENTITY openUnreadInWindows.accesskey "W">
+<!ENTITY openUnreadInTabs "Open Unread Items in Tabs">
+<!ENTITY openUnreadInTabs.accesskey "T">
+
+<!-- Livemark menu items -->
+<!ENTITY livemark.markAsRead "Mark Contents As Read">
+<!ENTITY livemark.markAsRead.accesskey "R">
+<!ENTITY livemark.markAsUnread "Mark Contents As Unread">
+<!ENTITY livemark.markAsUnread.accesskey "U">
+<!ENTITY livemark.refresh "Reload Live Bookmark">
+<!ENTITY livemark.refresh.accesskey "l">

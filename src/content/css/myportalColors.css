@@ -1,0 +1,63 @@
+/* myportalColors.css
+ * Copyright (C) 2005 Max Smolens
+ *
+ * This file is part of My Portal.
+ *
+ * My Portal is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * My Portal is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with My Portal; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ */
+
+/* Document body */
+body {
+  background-color: white;
+}
+
+/* Folder Heading */
+.folderHeading {
+  border-color: ThreeDShadow;
+}
+
+/* Folder Heading Links */
+.folderHeadingLink:link,
+.folderHeadingLink:visited {
+}
+
+/* Bookmark Links */
+a:link,
+a:visited {
+  color: black;
+  border-bottom-color: gray;
+}
+a:hover {
+  color: blue;
+  border-bottom-color: black;
+}
+
+/* Livemark links */
+.livemarkLink:visited {
+  color: gray;
+  border-bottom-color: lightgray;
+}
+.livemarkLink:hover {
+  color: blue;
+  border-bottom-color: black;
+}
+
+/* Smart bookmark textbox */
+.textbox {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  border-color: ThreeDShadow;
+}
