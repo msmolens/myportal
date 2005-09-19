@@ -1,3 +1,5 @@
 <link rel="stylesheet" href="/project.css" type="text/css">
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta content="text/css" http-equiv="Content-Style-Type">
+<meta name="description" content="My Portal is Firefox extension that creates a live web page of your bookmark hierarchy. Leave My Portal open in a tab to easily browse, search, and open your bookmarks.">
+<meta name="keywords" content="myportal, my portal, firefox, extension">
