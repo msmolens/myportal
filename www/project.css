@@ -28,6 +28,10 @@ ul {
   list-style-image: none;
 }
 
+#changelog {
+  list-style-type: none;
+}
+
 .screenshot {
   margin-top: 15px;
   text-align: center;
