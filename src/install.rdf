@@ -6,7 +6,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>{e957079f-59b4-4dbc-b4b8-34074072c68a}</em:id>
     <em:name>My Portal</em:name>
-    <em:version>1.0.1</em:version>
+    <em:version>1.0.2</em:version>
     <em:description>A live web page of your bookmark hierarchy.</em:description>
 
     <em:creator>Max Smolens; smolens@gmail.com</em:creator>
@@ -19,7 +19,7 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>1.4</em:minVersion>
-        <em:maxVersion>1.4.1</em:maxVersion>
+        <em:maxVersion>1.5.0.*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
