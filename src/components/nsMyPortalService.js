@@ -71,12 +71,16 @@ const historyObserverUpdatedTopic = 'myportal-historyobserver-updated';
 const shutdownTopic = 'xpcom-shutdown';
 
 
+//// Data sources
+
+var bookmarksDataSource = null;
+var historyDataSource = null;
+
+
 //// Services
 
 var rdfService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(nsIRDFService);
 var containerUtils = Components.classes['@mozilla.org/rdf/container-utils;1'].getService(nsIRDFContainerUtils);
-var bookmarksDataSource = Components.classes['@mozilla.org/rdf/datasource;1?name=bookmarks'].getService(nsIRDFDataSource);
-var historyDataSource = Components.classes['@mozilla.org/rdf/datasource;1?name=history'].getService(nsIRDFDataSource);
 var stringBundleService = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(nsIStringBundleService);
 var observerService = Components.classes['@mozilla.org/observer-service;1'].getService(nsIObserverService);
 var ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(nsIIOService);
@@ -130,6 +134,16 @@ var stringBundle = stringBundleService.createBundle('chrome://myportal/locale/my
 // Constructor.
 function nsMyPortalService()
 {
+        // Init bookmarks data source
+        bookmarksDataSource = rdfService.GetDataSource('rdf:bookmarks');
+
+        // Init history data source
+        historyDataSource = rdfService.GetDataSource('rdf:history');
+
+        // Load bookmarks
+        var bookmarksService = bookmarksDataSource.QueryInterface(Components.interfaces.nsIBookmarksService);
+        bookmarksService.readBookmarks();
+
         // Init preferences service
         this.prefs = preferencesService.getBranch('myportal.');
         this.prefsInternal = this.prefs.QueryInterface(nsIPrefBranchInternal);
@@ -1821,14 +1835,7 @@ myportalUpdateNotifier.prototype =
 {
         pushBegin: function(id)
         {
-                // When Firefox starts, NC:BookmarksRoot's name is
-                // unasserted and asserted.  If My Portal is loaded on
-                // startup, these assertions could cause the entire
-                // portal to be rendered twice.  Therefore, we ignore
-                // attribute changes to NC:BookmarksRoot.
-                if (id != 'NC:BookmarksRoot') {
-                        this.data[id] = true;
-                }
+                this.data[id] = true;
         },
 
         // Notifies observers with id if pushBegin was previously called with the same id.
@@ -1956,16 +1963,6 @@ myportalBookmarksObserver.prototype =
                 } else {
                         var splitPredicate = predicate.Value.split('#');
                         if (splitPredicate[0] == this.rdfPredicate) {
-
-                                // Ignore some RDF structure assertions for NC:BookmarksRoot.
-                                // When Firefox starts, it asserts some RDF assertions for NC:BookmarksRoot.
-                                // If My Portal is loaded on startup, these assertions could cause the entire
-                                // portal to be rendered twice.  Therefore, we ignore RDF structure changes
-                                // to NC:BookmarksRoot that don't end in '_<digits>'.
-                                if ((source.Value == 'NC:BookmarksRoot') &&
-                                    (splitPredicate[1].substr(0, 1) != '_')) {
-                                        return;
-                                }
 
                                 // RDF structure changed
                                 this.updatedRDFStructureIds.add(source.Value);
