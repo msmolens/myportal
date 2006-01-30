@@ -118,6 +118,18 @@ a:visited {
   font-size: 115%;
 }
 
+/* Favicons */
+img.favicon
+{
+  vertical-align: middle;
+  padding-right: 3px;
+}
+
+span.faviconLinkContainer
+{
+  white-space: nowrap;
+}
+
 /* Livemark links */
 .livemarkLink:visited {
   border-bottom-width: 1px;

@@ -41,6 +41,8 @@
 <!ENTITY openLinksNewTabOrWindow.accesskey "w">
 <!ENTITY showDescriptionTooltips "Show descriptions in tooltips">
 <!ENTITY showDescriptionTooltips.accesskey "p">
+<!ENTITY showFavicons "Show favicons">
+<!ENTITY showFavicons.accesskey "v">
 <!ENTITY increaseRecentlyVisitedSize "Increase font size if recently visited">
 <!ENTITY increaseRecentlyVisitedSize.accesskey "f">
 <!ENTITY truncateBookmarkNames "Truncate names longer than">

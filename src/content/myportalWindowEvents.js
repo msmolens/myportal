@@ -229,14 +229,19 @@ var myportalWindowEvents =
 
         //// Miscellaneous methods
 
-        // Gets a node's id from its 'id' or 'nodeId' attribute.
+        // Gets a node's id from its own or its parent's 'id' or 'nodeId' attribute.
         //
         // node: a DOM node
         getNodeId: function(node)
         {
                 var id = node.id;
                 if (!id) {
-                        id = node.getAttribute('nodeId');
+                        if (node.hasAttribute('nodeId')) {
+                                id = node.getAttribute('nodeId');
+                        } else {
+                                // Link with favicon
+                                id = node.parentNode.id;
+                       }
                 }
                 return id;
         },

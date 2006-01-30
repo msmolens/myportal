@@ -114,6 +114,7 @@ var RDF_LASTMODIFIEDDATE = rdfService.GetResource(WEBNS + 'LastModifiedDate');
 //// Preference globals
 
 var showDescriptionTooltips = null;
+var showFavicons = null;
 var openLinksNewTabOrWindow = null;
 var truncateBookmarkNames = null;
 var truncateBookmarkNamesLength = null;
@@ -497,6 +498,10 @@ nsMyPortalService.prototype =
                 return this.prefs.getBoolPref('showDescriptionTooltips');
         },
 
+        get showFavicons() {
+                return this.prefs.getBoolPref('showFavicons');
+        },
+
         get openLinksNewTabOrWindow() {
                 return this.prefs.getBoolPref('openLinksNewTabOrWindow');
         },
@@ -521,6 +526,7 @@ nsMyPortalService.prototype =
         loadGlobalPreferences: function()
         {
                 showDescriptionTooltips = this.showDescriptionTooltips;
+                showFavicons = this.showFavicons;
                 openLinksNewTabOrWindow = this.openLinksNewTabOrWindow;
                 truncateBookmarkNames = this.truncateBookmarkNames;
                 truncateBookmarkNamesLength = this.truncateBookmarkNamesLength;
@@ -535,6 +541,7 @@ nsMyPortalService.prototype =
         {
                 this.loadGlobalPreferences();
                 if (name == 'showDescriptionTooltips' ||
+                    name == 'showFavicons' ||
                     name == 'openLinksNewTabOrWindow' ||
                     name == 'truncateBookmarkNames' ||
                     name == 'truncateBookmarkNamesLength' ||
@@ -1027,7 +1034,6 @@ GeneralBookmarkNode.prototype.render = function(document,
         // Create link
         var link = document.createElement('a');
         link.href = this.url;
-        link.id = this.id;
 
         // Set tooltip
         if (showDescriptionTooltips) {
@@ -1042,7 +1048,30 @@ GeneralBookmarkNode.prototype.render = function(document,
         var name = this.truncate(this.name);
         var text = document.createTextNode(name);
         link.appendChild(text);
-        parentDOMNode.appendChild(link);
+
+        // Set favicon
+        var icon = this.icon;
+        if (showFavicons && icon)
+        {
+                // Insert icon and link into a container
+                var image = document.createElement('img');
+                image.src = icon;
+                image.className = 'favicon';
+
+                var container = document.createElement('span');
+                container.className = 'faviconLinkContainer';
+                container.appendChild(image);
+                container.appendChild(link);
+
+                // Assign container id
+                container.id = this.id;
+                parentDOMNode.appendChild(container);
+        }
+        else
+        {
+                link.id = this.id;
+                parentDOMNode.appendChild(link);
+        }
 
         // Separator forces line wrapping
         var separator = document.createElementNS(XULNS, 'separator');
@@ -1211,7 +1240,7 @@ SmartBookmarkNode.prototype.render = function(document,
         button.setAttribute('onclick', command);
         var icon = this.icon;
         if (icon) {
-                button.setAttribute('image', this.icon);
+                button.setAttribute('image', icon);
         }
         var name = this.truncate(this.name);
         button.setAttribute('label', name);
@@ -1960,6 +1989,14 @@ myportalBookmarksObserver.prototype =
                         if (this.updatedQueue.pushEnd(source.Value)) {
                                 this.notificationTimer.reset();
                         }
+                } else if (predicate == RDF_ICON) {
+
+                        // Favicon added
+                        // Force update, because updating favicon doesn't update last modified date
+                        this.updatedQueue.pushBegin(source.Value);
+                        if (this.updatedQueue.pushEnd(source.Value)) {
+                                this.notificationTimer.reset();
+                        }
                 } else {
                         var splitPredicate = predicate.Value.split('#');
                         if (splitPredicate[0] == this.rdfPredicate) {
@@ -1980,6 +2017,14 @@ myportalBookmarksObserver.prototype =
 
                         // Bookmark attribute changed
                         this.updatedQueue.pushBegin(source.Value);
+                } else if (predicate == RDF_ICON) {
+
+                        // Favicon removed
+                        // Force update, because updating favicon doesn't update last modified date
+                        this.updatedQueue.pushBegin(source.Value);
+                        if (this.updatedQueue.pushEnd(source.Value)) {
+                                this.notificationTimer.reset();
+                        }
                 } else if (predicate.Value.split('#')[0] == this.rdfPredicate) {
 
                         // RDF structure changed
@@ -2010,6 +2055,14 @@ myportalBookmarksObserver.prototype =
                 } else if (predicate == RDF_LASTMODIFIEDDATE) {
 
                         // Last modified date changed
+                        if (this.updatedQueue.pushEnd(source.Value)) {
+                                this.notificationTimer.reset();
+                        }
+                } else if (predicate == RDF_ICON) {
+
+                        // Favicon changed
+                        // Force update, because updating favicon doesn't update last modified date
+                        this.updatedQueue.pushBegin(source.Value);
                         if (this.updatedQueue.pushEnd(source.Value)) {
                                 this.notificationTimer.reset();
                         }

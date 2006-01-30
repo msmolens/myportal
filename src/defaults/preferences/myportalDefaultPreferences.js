@@ -18,3 +18,4 @@ pref("myportal.openLinksNewTabOrWindow", false);
 pref("myportal.automaticallyUpdatePortal", true);
 pref("myportal.increaseRecentlyVisitedSize", true);
 pref("myportal.ageVisitedLinksDelay", 3600);
+pref("myportal.showFavicons", true);

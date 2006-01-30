@@ -58,6 +58,15 @@ a:visited {
 .visitedPastWeek {
 }
 
+/* Favicons */
+img.favicon
+{
+}
+
+span.faviconLinkContainer
+{
+}
+
 /* Livemark links */
 .livemarkLink:visited {
 }

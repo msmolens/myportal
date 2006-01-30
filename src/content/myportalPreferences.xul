@@ -209,6 +209,10 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
                   name="myportal.showDescriptionTooltips"
                   type="bool"
                   instantApply="false"/>
+      <preference id="showFavicons"
+                  name="myportal.showFavicons"
+                  type="bool"
+                  instantApply="false"/>
       <preference id="increaseRecentlyVisitedSize"
                   name="myportal.increaseRecentlyVisitedSize"
                   type="bool"
@@ -257,6 +261,10 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
                 preference="showDescriptionTooltips"
                 label="&showDescriptionTooltips;"
                 accesskey="&showDescriptionTooltips.accesskey;"/>
+      <checkbox id="showFaviconsCheckbox"
+                preference="showFavicons"
+                label="&showFavicons;"
+                accesskey="&showFavicons.accesskey;"/>
       <checkbox id="increaseRecentlyVisitedSizeCheckbox"
                 preference="increaseRecentlyVisitedSize"
                 label="&increaseRecentlyVisitedSize;"
