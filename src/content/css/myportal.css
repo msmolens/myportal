@@ -67,7 +67,10 @@ body {
 /* Folder Heading */
 .folderHeading {
   display: inline;
-  padding: 2px 1.0em;
+  padding-top: 2px;
+  padding-right: 1.0em;
+  padding-bottom: 2px;
+  padding-left: 1.0em;
   font-size: 120%;
   -moz-border-radius: 3px;
   border-width: 1px;
@@ -77,6 +80,28 @@ body {
 /* Livemark Folder Heading */
 .livemarkFolderHeading {
   padding-right: 0.5em;
+}
+
+/* Folder Heading Collapse Button */
+.collapseButton {
+  border: 0px;
+  padding: 0px;
+  margin-left: -1.0em;
+  background: transparent;
+  list-style-image: url('chrome://myportal/skin/collapsebutton.png');
+  vertical-align: middle;
+  -moz-image-region: rect(16px 16px 32px 0px);
+}
+.collapseButton:hover {
+  -moz-image-region: rect(0px 16px 16px 0px);
+}
+
+.collapseButton[collapsed=true] {
+  -moz-image-region: rect(16px 32px 32px 16px);
+}
+
+.collapseButton[collapsed=true]:hover {
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 /* Folder Heading Links */

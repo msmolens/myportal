@@ -84,6 +84,9 @@ var myportal =
                 // Init age timer
                 this.ageTimer = new MyPortalAgeTimer(this.prefs);
 
+                // Init collapser
+                this.collapser = new MyPortalCollapser();
+
                 // Render bookmarks
                 this.renderBookmarks();
 

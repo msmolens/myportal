@@ -33,6 +33,10 @@ body {
 .livemarkFolderHeading {
 }
 
+/* Folder Heading Collapse Button */
+.collapseButton {
+}
+
 /* Folder Heading Links */
 .folderHeadingLink:link,
 .folderHeadingLink:visited {

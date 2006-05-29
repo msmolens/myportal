@@ -34,18 +34,24 @@ const nsIFactory = Components.interfaces.nsIFactory;
 const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
 const nsITimer = Components.interfaces.nsITimer;
 const nsIRDFService = Components.interfaces.nsIRDFService;
+const nsIRDFContainer = Components.interfaces.nsIRDFContainer;
 const nsIRDFContainerUtils = Components.interfaces.nsIRDFContainerUtils;
 const nsIRDFDataSource = Components.interfaces.nsIRDFDataSource;
+const nsIRDFRemoteDataSource = Components.interfaces.nsIRDFRemoteDataSource;
 const nsIStringBundleService = Components.interfaces.nsIStringBundleService;
 const nsIRDFResource = Components.interfaces.nsIRDFResource;
 const nsIRDFLiteral = Components.interfaces.nsIRDFLiteral;
 const nsIRDFDate = Components.interfaces.nsIRDFDate;
 const nsIObserverService = Components.interfaces.nsIObserverService;
+const nsIBookmarksService = Components.interfaces.nsIBookmarksService;
 const nsIGlobalHistory2 = Components.interfaces.nsIGlobalHistory2;
 const nsIBrowserHistory = Components.interfaces.nsIBrowserHistory;
 const nsIIOService = Components.interfaces.nsIIOService;
 const nsIPrefService = Components.interfaces.nsIPrefService;
 const nsIPrefBranchInternal = Components.interfaces.nsIPrefBranchInternal;
+const nsIProperties = Components.interfaces.nsIProperties;
+const nsILocalFile = Components.interfaces.nsILocalFile;
+const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
 
 
 //// Namespace constants
@@ -55,6 +61,7 @@ const WEBNS = 'http://home.netscape.com/WEB-rdf#';
 const RDFNS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 const HTMLNS = 'http://www.w3.org/1999/xhtml';
 const XULNS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+const MYPORTALNS = 'http://www.unroutable.org/rdf';
 
 
 //// Notification topics
@@ -73,12 +80,14 @@ const shutdownTopic = 'xpcom-shutdown';
 
 //// Data sources
 
+var myportalDataSource = null;
 var bookmarksDataSource = null;
 var historyDataSource = null;
 
 
 //// Services
 
+var myportalService = null;
 var rdfService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(nsIRDFService);
 var containerUtils = Components.classes['@mozilla.org/rdf/container-utils;1'].getService(nsIRDFContainerUtils);
 var stringBundleService = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(nsIStringBundleService);
@@ -87,6 +96,7 @@ var ioService = Components.classes['@mozilla.org/network/io-service;1'].getServi
 var globalHistoryService = Components.classes['@mozilla.org/browser/global-history;2'].getService(nsIGlobalHistory2);
 var browserHistoryService = Components.classes['@mozilla.org/browser/global-history;2'].getService(nsIBrowserHistory);
 var preferencesService = Components.classes['@mozilla.org/preferences-service;1'].getService(nsIPrefService);
+var directoryService = Components.classes['@mozilla.org/file/directory_service;1'].getService(nsIProperties);
 
 
 //// RDF resources
@@ -109,6 +119,7 @@ var RDF_LASTVISITDATE = rdfService.GetResource(WEBNS + 'LastVisitDate');
 var RDF_DATE = rdfService.GetResource(NCNS + 'Date');
 var RDF_CHILD = rdfService.GetResource(NCNS + 'child');
 var RDF_LASTMODIFIEDDATE = rdfService.GetResource(WEBNS + 'LastModifiedDate');
+var RDF_MYPORTAL_COLLAPSED_ROOT = rdfService.GetResource(MYPORTALNS + '/collapsed/all');
 
 
 //// Preference globals
@@ -141,8 +152,11 @@ function nsMyPortalService()
         // Init history data source
         historyDataSource = rdfService.GetDataSource('rdf:history');
 
+        // Init My Portal data source
+        myportalDataSource = new MyPortalDataSource();
+
         // Load bookmarks
-        var bookmarksService = bookmarksDataSource.QueryInterface(Components.interfaces.nsIBookmarksService);
+        var bookmarksService = bookmarksDataSource.QueryInterface(nsIBookmarksService);
         bookmarksService.readBookmarks();
 
         // Init preferences service
@@ -178,6 +192,8 @@ function nsMyPortalService()
 
         // Observe preferences changes
         this.prefsInternal.addObserver('', this, false);
+
+        myportalService = this;
 }
 
 nsMyPortalService.prototype =
@@ -187,6 +203,7 @@ nsMyPortalService.prototype =
         {
                 this.bookmarksObserver.disable();
                 this.historyObserver.disable();
+                myportalDataSource.flush();
                 observerService.removeObserver(this, bookmarksObserverNotifyTopic);
                 observerService.removeObserver(this, bookmarksObserverUpdatedTopic);
                 observerService.removeObserver(this, bookmarksObserverStructureUpdatedTopic);
@@ -491,6 +508,43 @@ nsMyPortalService.prototype =
                 browserHistoryService.removePage(uri);
         },
 
+
+        //// GUI methods
+
+        // Toggles a bookmark folder's collapsed state.
+        //
+        // node: clicked node
+        // folderNode: bookmark folder node
+        // nodeId: bookmark folder id
+        toggleCollapsed: function(node, folderNode, nodeId)
+        {
+                var collapsed = this.isCollapsed(folderNode);
+                this.setCollapsed(node, folderNode, !collapsed);
+                myportalDataSource.setCollapsed(nodeId, !collapsed);
+        },
+
+        // Returns true if a bookmark folder is collapsed.
+        //
+        // node: bookmark folder node
+        isCollapsed: function(node)
+        {
+                var display = node.style.display;
+                var collapsed = display && display == 'none';
+                return collapsed;
+        },
+
+        // Sets a bookmark folder's collapsed state.
+        //
+        // node: clicked node
+        // folderNode: bookmark folder node
+        // collapsed: collapsed state
+        setCollapsed: function(node,
+                               folderNode,
+                               collapsed)
+        {
+                node.setAttribute('collapsed', collapsed ? 'true': 'false');
+                folderNode.style.display = collapsed ? 'none' : 'block';
+        },
 
         //// Preference methods
 
@@ -1246,6 +1300,14 @@ SmartBookmarkNode.prototype.render = function(document,
         var name = this.truncate(this.name);
         button.setAttribute('label', name);
 
+        // Set tooltip
+        if (showDescriptionTooltips) {
+                var description = this.description;
+                if (description) {
+                        button.setAttribute('tooltiptext', description);
+                }
+        }
+
         box.appendChild(textbox);
         box.appendChild(button);
 
@@ -1316,6 +1378,7 @@ BookmarkContainerNode.prototype.folderHeadingLinkClass = 'folderHeadingLink';
 BookmarkContainerNode.prototype.folderContentsClass = 'folderContents';
 BookmarkContainerNode.prototype.livemarkFolderHeadingClass = 'livemarkFolderHeading';
 BookmarkContainerNode.prototype.emptyFolderNoteClass = 'emptyFolderNote';
+BookmarkContainerNode.prototype.collapseButtonClass = 'collapseButton';
 
 // Returns myportal:// href.
 BookmarkContainerNode.prototype.__defineGetter__('href', function()
@@ -1366,19 +1429,28 @@ BookmarkContainerNode.prototype.render = function(document,
 
         folder.appendChild(folderHeading);
 
+        // Create folder contents
+        var folderContents = document.createElement('div');
+        folderContents.className = this.folderContentsClass;
+
         // Create folder name
         if (isPortalRoot) {
                 this.createRootFolderHeading(document, folderHeading);
         } else {
-                folderHeading.appendChild(this.createLink(document, this, this.folderHeadingLinkClass));
+                var collapseButton = this.createCollapseButton(document, this, this.collapseButtonClass);
+                var link = this.createLink(document, this, this.folderHeadingLinkClass);
+
+                // Set collapsed attributes
+                if (myportalDataSource.isCollapsed(this.id)) {
+                        myportalService.setCollapsed(collapseButton, folderContents, true);
+                }
+
+                folderHeading.appendChild(collapseButton);
+                folderHeading.appendChild(link);
         }
 
         // Set livemark-specific attributes
         this.setLivemark(document, folderHeading);
-
-        // Create folder contents
-        var folderContents = document.createElement('div');
-        folderContents.className = this.folderContentsClass;
 
         // Add note to empty folders
         if (this.isLeaf()) {
@@ -1481,6 +1553,28 @@ BookmarkContainerNode.prototype.createLink = function(document,
         var linkText = document.createTextNode(node.name);
         link.appendChild(linkText);
         return link;
+};
+
+// Creates a collapse button.
+//
+// node: BookmarkNode to render
+BookmarkContainerNode.prototype.createCollapseButton = function(document,
+                                                                node)
+{
+        // Create button
+        var button = document.createElement('button');
+        button.className = this.collapseButtonClass;
+        button.setAttribute(this.nodeIdAttribute, node.id);
+
+        // Set click handler
+        button.setAttribute('onclick', 'try {myportal.collapser.toggle(this);} catch (e) {}');
+
+        // Create image
+        var image = document.createElementNS(XULNS, 'image');
+        image.id = 'myportal-' + node.id;
+
+        button.appendChild(image);
+        return button;
 };
 
 // Creates a note to indicate an empty folder.
@@ -2152,4 +2246,117 @@ myportalHistoryObserver.prototype =
         onBeginUpdateBatch: function(ds) {},
 
         onEndUpdateBatch: function(ds) {}
+};
+
+
+//// My Portal Data Source
+
+// Constructor.
+function MyPortalDataSource()
+{
+        this._open();
+}
+
+MyPortalDataSource.prototype =
+{
+        filename: 'myportal.rdf',
+
+        // Get profile path.
+        _getProfilePath: function()
+        {
+                return directoryService.get('ProfD', nsILocalFile);
+        },
+
+        // Get URL for datasource file.
+        // See http://kb.mozillazine.org/File_IO
+        _getURL: function()
+        {
+                // Create file
+                var file = this._getProfilePath();
+                file.append(this.filename);
+                if (!file.exists()) {
+                        file.create(nsILocalFile.NORMAL_FILE_TYPE, 0664);
+                }
+
+                // Get file URL
+                var fileHandler = ioService.getProtocolHandler('file').QueryInterface(nsIFileProtocolHandler);
+                var url = fileHandler.getURLSpecFromFile(file);
+                return url;
+        },
+
+        // Open datasource.
+        _open: function()
+        {
+                var url = this._getURL();
+                this.ds = rdfService.GetDataSourceBlocking(url);
+                this.collapsedContainer = Components.classes['@mozilla.org/rdf/container;1'].createInstance(nsIRDFContainer);
+                containerUtils.MakeBag(this.ds, RDF_MYPORTAL_COLLAPSED_ROOT);
+                this.collapsedContainer.Init(this.ds, RDF_MYPORTAL_COLLAPSED_ROOT);
+        },
+
+        // Check if a container contains a node.
+        //
+        // container: the container
+        // node: the node to search for
+        _contains: function(container,
+                            node)
+        {
+                return (-1 != container.IndexOf(node));
+        },
+
+        // Insert a node into a container.
+        //
+        // container: the container
+        // node: the node to insert
+        _insert: function(container,
+                          node)
+        {
+                container.AppendElement(node);
+        },
+
+        // Remove a node from a container.
+        //
+        // container: the container
+        // node: the node to remove
+        _remove: function(container,
+                          node)
+        {
+                container.RemoveElement(node, true);
+        },
+
+        // Flush the datasource to disk.
+        flush: function()
+        {
+                this.ds.QueryInterface(nsIRDFRemoteDataSource);
+                this.ds.Flush();
+        },
+
+        // Check if a bookmark folder is collapsed.
+        //
+        // nodeId: the bookmark folder id
+        isCollapsed: function(nodeId)
+        {
+                var node = rdfService.GetLiteral(nodeId);
+                return this._contains(this.collapsedContainer, node);
+        },
+
+        // Sets a bookmark folder's collapsed state.
+        //
+        // nodeId: the bookmark folder id
+        // collapsed: the collapsed state
+        setCollapsed: function(nodeId,
+                               collapsed)
+        {
+                var node = rdfService.GetLiteral(nodeId);
+                var exists = this._contains(this.collapsedContainer, node);
+                if (collapsed) {
+                        if (!exists) {
+                                this._insert(this.collapsedContainer, node);
+                        }
+                } else {
+                        if (exists) {
+                                this._remove(this.collapsedContainer, node);
+                        }
+                }
+        }
 };
