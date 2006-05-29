@@ -710,6 +710,7 @@ BookmarksTree.prototype =
         // Returns root bookmark node's name.
         get rootName()
         {
+                this._ensureCurrent();
                 return this.root.name;
         }
 };
