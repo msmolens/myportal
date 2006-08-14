@@ -41,6 +41,10 @@ MyPortalLinkExtractor.prototype.extract = function(node)
                                 // Bookmark
                                 url = child.href;
                                 urls.push(url);
+                        } else if (child.tagName == 'SPAN') {
+                                // Bookmark w/image
+                                url = child.lastChild.href;
+                                urls.push(url);
                         } else if (child.tagName == 'DIV' &&
                                    child.firstChild &&
                                    child.firstChild.tagName == 'FORM') {
