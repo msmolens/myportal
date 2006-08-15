@@ -1,3 +1,9 @@
+2006-08-14  Max Smolens  <smolens@gmail.com>
+
+	* Released version 1.0.6:
+	  Fix problem with links that have a favicon when opening all
+	  links in a folder.
+
 2006-05-30  Max Smolens  <smolens@gmail.com>
 
 	* Released version 1.0.5:
