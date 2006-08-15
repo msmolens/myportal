@@ -469,6 +469,18 @@ nsMyPortalService.prototype =
                 return node.href;
         },
 
+        // Returns URL for a bookmark.
+        //
+        // nodeId: bookmark id
+        getURLForId: function(nodeId)
+        {
+                var node = this.bookmarksTree.findById(nodeId);
+                if (node) {
+                        return node.url;
+                }
+                return '';
+        },
+
         // Returns list of ids of bookmarks with a particular URL.
         //
         // url: bookmark URL
@@ -1754,9 +1766,9 @@ LivemarkNode.prototype.setLivemark = function(document,
         refreshButton.title = stringBundle.GetStringFromName('livemark.refresh');
 
         // Mark each button as livemark for popup handler
-        markAsReadButton.setAttribute(this.livemarkAttribute, 'true');
+//      markAsReadButton.setAttribute(this.livemarkAttribute, 'true');
         markAsReadButton.setAttribute(this.nodeIdAttribute, this.id);
-        refreshButton.setAttribute(this.livemarkAttribute, 'true');
+//      refreshButton.setAttribute(this.livemarkAttribute, 'true');
         refreshButton.setAttribute(this.nodeIdAttribute, this.id);
 
         // Set click handlers

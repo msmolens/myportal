@@ -17,6 +17,10 @@
 <!ENTITY openUnreadInTabs.accesskey "T">
 
 <!-- Livemark menu items -->
+<!ENTITY livemark.openLocationInWindow "Open Location in New Window">
+<!ENTITY livemark.openLocationInWindow.accesskey "L">
+<!ENTITY livemark.openLocationInTab "Open Location in New Tab">
+<!ENTITY livemark.openLocationInTab.accesskey "L">
 <!ENTITY livemark.markAsRead "Mark Contents As Read">
 <!ENTITY livemark.markAsRead.accesskey "R">
 <!ENTITY livemark.markAsUnread "Mark Contents As Unread">

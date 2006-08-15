@@ -83,6 +83,11 @@ var myportalWindowEvents =
                 livemarkMenuItems.push(document.getElementById('myportalLivemarkMarkAsUnread'));
                 livemarkMenuItems.push(document.getElementById('myportalLivemarkRefresh'));
 
+                // Create list of livemark location menuitems
+                var livemarkLocationMenuItems = new MenuItems();
+                livemarkLocationMenuItems.push(document.getElementById('myportalOpenLivemarkLocationInWindow'));
+                livemarkLocationMenuItems.push(document.getElementById('myportalOpenLivemarkLocationInTab'));
+
                 // Determine clicked node's type
                 const myportalURL = 'myportal://';
                 var location = getBrowser().contentDocument.location.href;
@@ -94,6 +99,9 @@ var myportalWindowEvents =
 
                 // True if clicked livemark's title link or icon
                 var isLivemark = isMyPortal && myportalWindowEvents.isLivemark(node);
+
+                // True if clicked a livemark that has a location
+                var isLivemarkWithLocation = isLivemark && myportalWindowEvents.isLivemarkWithLocation(node);
 
                 // True if clicked livemark link
                 var isLivemarkLink = isMyPortal && node.className == 'livemarkLink';
@@ -109,6 +117,7 @@ var myportalWindowEvents =
 
                 // Set menuitem visibility
                 livemarkMenuItems.setVisible(isLivemark);
+                livemarkLocationMenuItems.setVisible(isLivemarkWithLocation);
                 openFolderMenuItems.setVisible(isFolder);
                 openUnreadMenuItems.setVisible(isFolder && isLivemark);
 
@@ -137,8 +146,45 @@ var myportalWindowEvents =
                         (node.getAttribute(livemarkAttribute) == 'true'));
         },
 
+        // Returns true if node has a URL.
+        isLivemarkWithLocation: function(node)
+        {
+                var id = this.getNodeId(node);
+                var url = this.myportalService.getURLForId(id);
+                return (url != '');
+        },
+
 
         //// Livemark methods
+
+        // Opens livemark's location URL in a new window.
+        //
+        // node: clicked DOM node
+        openLivemarkLocationInWindow: function(node)
+        {
+                var opener = new MyPortalWindowLinkOpener();
+                this._openLivemarkLocation(node, opener);
+        },
+
+        // Opens livemark's location URL in a new tab.
+        //
+        // node: clicked DOM node
+        openLivemarkLocationInTab: function(node)
+        {
+                var opener = new MyPortalTabLinkOpener();
+                this._openLivemarkLocation(node, opener);
+        },
+
+        // Opens URL with opener.
+        //
+        // node: clicked DOM node
+        // opener: link opener
+        _openLivemarkLocation: function(node, opener)
+        {
+                var id = this.getNodeId(node);
+                var url = this.myportalService.getURLForId(id);
+                opener.open(url);
+        },
 
         // Marks livemark's contents as read.
         //

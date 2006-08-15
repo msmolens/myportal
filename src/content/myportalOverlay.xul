@@ -43,6 +43,10 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
   <commandset id="mainCommandSet">
     <command id="Tools:MyPortal"
              oncommand="getBrowser().contentDocument.location.href='myportal://';"/>
+    <command id="cmd_myportalOpenLivemarkLocationInWindow"
+             oncommand="try {myportalWindowEvents.openLivemarkLocationInWindow(document.popupNode);} catch (e) {}"/>
+    <command id="cmd_myportalOpenLivemarkLocationInTab"
+             oncommand="try {myportalWindowEvents.openLivemarkLocationInTab(document.popupNode);} catch (e) {}"/>
     <command id="cmd_myportalOpenFolderInWindows"
              oncommand="try {myportalWindowEvents.openFolderInWindows(document.popupNode);} catch (e) {}"/>
     <command id="cmd_myportalOpenFolderInTabs"
@@ -73,6 +77,18 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
   <!-- Context menu -->
   <popup id="contentAreaContextMenu">
+    <menuitem id="myportalOpenLivemarkLocationInWindow"
+              label="&livemark.openLocationInWindow;"
+              accesskey="&livemark.openLocationInWindow.accesskey;"
+              command="cmd_myportalOpenLivemarkLocationInWindow"
+              hidden="true"
+              insertbefore="context-sep-open"/>
+    <menuitem id="myportalOpenLivemarkLocationInTab"
+              label="&livemark.openLocationInTab;"
+              accesskey="&livemark.openLocationInTab.accesskey;"
+              command="cmd_myportalOpenLivemarkLocationInTab"
+              hidden="true"
+              insertbefore="context-sep-open"/>
     <menuitem id="myportalOpenFolderInWindows"
               label="&openFolderInWindows;"
               accesskey="&openFolderInWindows.accesskey;"

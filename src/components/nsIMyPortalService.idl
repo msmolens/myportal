@@ -38,6 +38,7 @@ interface nsIMyPortalService: nsISupports
         void refreshLivemark(in string nodeId);
         string getIdForPath(in string bookmarksPath);
         string getHrefForId(in string nodeId);
+        string getURLForId(in string nodeId);
         void addURL(in string url);
         void toggleCollapsed(in nsIDOMNode node,
                              in nsIDOMNode folderNode,

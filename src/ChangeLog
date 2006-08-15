@@ -1,6 +1,10 @@
 2006-08-14  Max Smolens  <smolens@gmail.com>
 
 	* Released version 1.0.6:
+	  Add commands to livemark popup menu that open livemark's
+	  location URL.  Install the LiveClick extension to show the
+	  Location field in the livemark's properties.
+
 	  Fix problem with links that have a favicon when opening all
 	  links in a folder.
 
