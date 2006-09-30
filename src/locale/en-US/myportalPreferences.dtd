@@ -34,7 +34,6 @@
 <!ENTITY useCustomStyleSheetButton "Browse...">
 <!ENTITY useCustomStyleSheetButton.accesskey "o">
 <!ENTITY useCustomStyleSheet.template.description "View Template">
-<!ENTITY useCustomStyleSheet.template.url "chrome://myportal/content/css/template.css">
 <!ENTITY automaticallyUpdatePortal "Automatically update &name; when bookmarks change">
 <!ENTITY automaticallyUpdatePortal.accesskey "u">
 <!ENTITY openLinksNewTabOrWindow "Open in new tab or window">

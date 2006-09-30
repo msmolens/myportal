@@ -53,12 +53,38 @@ MyPortalCustomStyleSheet.prototype =
                                 var fileHandler = ioService.getProtocolHandler('file').QueryInterface(Components.interfaces.nsIFileProtocolHandler);
                                 var file = fileHandler.getFileFromURLSpec(this.customStyleSheetFilename);
                                 if (file.exists() && file.isFile()) {
-                                        customStyleSheet.innerHTML = '@import url("' + this.customStyleSheetFilename + '");';
+                                        // FIREFOX2 import causes security error, load CSS directly from file instead
+//                                      customStyleSheet.innerHTML = '@import url("' + this.customStyleSheetFilename + '");';
+                                        var css = this._readCustomStyleSheet(file);
+                                        customStyleSheet.innerHTML = css;
                                 }
                         } catch (e) {
                                 customStyleSheet.innerHTML = '';
                         }
                 }
+        },
+
+        // Reads custom style sheet from file.
+        //
+        // file: nsIFile containing the style sheet
+        _readCustomStyleSheet: function(file)
+        {
+                var fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance(Components.interfaces.nsIFileInputStream);
+                var sstream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
+                fstream.init(file, 0x01, 0x444, 0); // PR_RDONLY, PR_IRUSR | PR_IRGRP | PR_IROTH
+                sstream.init(fstream);
+
+                var css = '';
+                const BufSize = 4096;
+                var buf = sstream.read(BufSize);
+                while (buf.length > 0) {
+                        css += buf;
+                        buf = sstream.read(BufSize);
+                }
+                sstream.close();
+                fstream.close();
+
+                return css;
         },
 
 

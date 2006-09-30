@@ -61,7 +61,12 @@ nsMyPortalProtocol.prototype =
                          baseURI)
         {
                 var uri = Components.classes['@mozilla.org/network/simple-uri;1'].createInstance(nsIURI);
-                uri.spec = spec;
+
+                // FIREFOX2 null spec prevents loading
+                if (spec.length)
+                {
+                        uri.spec = spec;
+                }
                 return uri;
         },
 

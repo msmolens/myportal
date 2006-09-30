@@ -172,7 +172,7 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
                 onsynctopreference="return myportalPreferences.updateDisabled('useCustomStyleSheet', 'customStyleSheetFilenameTextbox, useCustomStyleSheetButton');"
                 flex="1"/>
       <label value="&useCustomStyleSheet.template.description;"
-             href="&useCustomStyleSheet.template.url;"
+             onclick="openDialog('chrome://browser/content/browser.xul', '_blank', 'chrome,all,dialog=no', 'chrome://myportal/content/css/template.css', null, null);"
              class="text-link"/>
       </hbox>
       <hbox align="center">
