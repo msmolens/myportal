@@ -44,7 +44,7 @@ nsMyPortalProtocol.prototype =
         //// nsIProtocolHandler attributes
 
         scheme: MYPORTALPROTOCOL_SCHEME,
-        defaultPort: 0,
+        defaultPort: -1,
         protocolFlags: nsIProtocolHandler.URI_NORELATIVE | nsIProtocolHandler.URI_NOAUTH,
 
 
@@ -61,11 +61,11 @@ nsMyPortalProtocol.prototype =
                          baseURI)
         {
                 var uri = Components.classes['@mozilla.org/network/simple-uri;1'].createInstance(nsIURI);
-
-                // FIREFOX2 null spec prevents loading
-                if (spec.length)
-                {
+                if (spec.indexOf('://') != -1) {
                         uri.spec = spec;
+                } else {
+                        // Assume missing scheme is http
+                        uri.spec = 'http://' + spec;
                 }
                 return uri;
         },
