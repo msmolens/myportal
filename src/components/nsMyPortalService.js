@@ -525,6 +525,12 @@ nsMyPortalService.prototype =
 
         // Toggles a bookmark folder's collapsed state.
         //
+        // This looks at the actual folder node that was clicked
+        // instead of simply querying the data source, because
+        // multiple myportal:// pages open simultaneously can display
+        // a different collapsed state for the same folder.  The most
+        // recently toggled state is saved in the data source.
+        //
         // node: clicked node
         // folderNode: bookmark folder node
         // nodeId: bookmark folder id
