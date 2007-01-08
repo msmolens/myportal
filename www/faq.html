@@ -1,0 +1,46 @@
+<!-- MAIN CONTENT -->
+<h5 class="page-header">Frequently Asked Questions</h5>
+
+<p>General Questions</p>
+<ul>
+<li><a href="#localfilelinks">
+Why don't links to local files work on My Portal?
+</a></li>
+</ul>
+
+<hr>
+
+<dl>
+<dt>
+Why don't links to local files work on My Portal?
+</dt>
+<dd>
+<p>
+For security reasons, Firefox blocks links to local files on a web
+page unless the web page is local (i.e. has a <code>file://</code>
+URL).  The Error Console (JavaScript Console in Firefox 1.x) displays
+a message that the link was blocked.
+</p>
+<p>
+To remove this security check for only <code>myportal://</code> URLs, add
+the following to your
+<a href="http://kb.mozillazine.org/User.js_file"><code>user.js</code></a>
+file:
+</p>
+<blockquote>
+<pre>
+user_pref("capability.policy.policynames", "localfilelinks");
+user_pref("capability.policy.localfilelinks.sites", "myportal://");
+user_pref("capability.policy.localfilelinks.checkloaduri.enabled", "allAccess");
+</pre>
+</blockquote>
+See
+<a href="http://kb.mozillazine.org/Links_to_local_pages_don't_work">
+MozillaZine</a> for more information.
+<p>
+Alternatively, try the
+<a href="http://locallink.mozdev.org/">LocalLink</a> extension, which
+allows opening links to local files from the context menu.
+</p>
+</dd>
+</dl>
