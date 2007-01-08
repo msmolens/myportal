@@ -40,3 +40,7 @@ ul {
 .screenshot > img {
   border: 1px dashed #9999FF;
 }
+
+dt {
+  font-weight: bold;
+}
