@@ -24,7 +24,7 @@
 interface nsIDOMNode;
 
 [scriptable, uuid(19d258c7-dd37-4cea-8452-ce0507f4c4d4)]
-interface nsIMyPortalService: nsISupports
+interface nsIMyPortalService : nsISupports
 {
         string createDOMBookmarksTree(in nsIDOMNode parentNode,
                                       in string nodeId);

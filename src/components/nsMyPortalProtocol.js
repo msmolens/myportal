@@ -1,5 +1,5 @@
-/* nsMyPortalProtocol.c
- * Copyright (C) 2005 Max Smolens
+/* nsMyPortalProtocol.js
+ * Copyright (C) 2005-2007 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -36,8 +36,9 @@ const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
 //   nsISupports
 //   nsIProtocolHandler
 
-// Constructor.
-function nsMyPortalProtocol() {}
+function nsMyPortalProtocol()
+{
+}
 
 nsMyPortalProtocol.prototype =
 {
@@ -110,6 +111,14 @@ var nsMyPortalProtocolModule =
                                                 fileSpec,
                                                 location,
                                                 type);
+        },
+
+        unregisterSelf: function(compMgr,
+                                 location,
+                                 type)
+        {
+                compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
+                compMgr.unregisterFactoryLocation(MYPORTALPROTOCOL_CID, location);
         },
 
         getClassObject: function(compMgr,

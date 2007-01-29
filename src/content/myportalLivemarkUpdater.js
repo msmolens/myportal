@@ -35,18 +35,17 @@ function MyPortalLivemarkUpdater(prefs,
         this.prefs = prefs;
         this.myportal = myportal;
 
+        // Init notification topics
+        var topicService =  Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(Components.interfaces.nsIMyPortalNotificationTopicService);
+        this.livemarkUpdateEndedTopic = topicService.topic('livemarkUpdateEnded');
+        this.livemarkUpdateEndedNoFadeTopic = topicService.topic('livemarkUpdateEndedNoFade');
+
         // Stores fade timers
         this.timers = new Object();
 }
 
 MyPortalLivemarkUpdater.prototype =
 {
-        //// Topics
-
-        livemarkUpdateEndedTopic: 'myportal-livemark-update-ended', // matches value in nsMyPortalService.js
-        livemarkUpdateEndedNoFadeTopic: 'myportal-livemark-update-ended-nofade', // matches value in nsMyPortalService.js
-
-
         //// Services
 
         myportalService: Components.classes['@unroutable.org/myportal-service;1'].getService(Components.interfaces.nsIMyPortalService),

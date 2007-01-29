@@ -1,5 +1,5 @@
 /* nsMyPortalService.js
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2007 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -21,23 +21,23 @@
 
 //// Component constants
 
-const MYPORTALSERVICE_NAME = 'My Portal';
+const MYPORTALSERVICE_NAME = 'My Portal Service';
 const MYPORTALSERVICE_CONTRACTID = '@unroutable.org/myportal-service;1';
 const MYPORTALSERVICE_CID = Components.ID('{34b0eda1-1917-47bd-9143-b6b3a0f2bcca}');
 
 
 //// Interface constants
 
-const nsISupports = Components.interfaces.nsISupports;
 const nsIMyPortalService = Components.interfaces.nsIMyPortalService;
+const nsIMyPortalDataSource = Components.interfaces.nsIMyPortalDataSource;
+const nsIMyPortalBookmarksObserver = Components.interfaces.nsIMyPortalBookmarksObserver;
+const nsIMyPortalHistoryObserver = Components.interfaces.nsIMyPortalHistoryObserver;
+const nsIMyPortalNotificationTopicService = Components.interfaces.nsIMyPortalNotificationTopicService;
+const nsISupports = Components.interfaces.nsISupports;
 const nsIFactory = Components.interfaces.nsIFactory;
 const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
-const nsITimer = Components.interfaces.nsITimer;
 const nsIRDFService = Components.interfaces.nsIRDFService;
-const nsIRDFContainer = Components.interfaces.nsIRDFContainer;
 const nsIRDFContainerUtils = Components.interfaces.nsIRDFContainerUtils;
-const nsIRDFDataSource = Components.interfaces.nsIRDFDataSource;
-const nsIRDFRemoteDataSource = Components.interfaces.nsIRDFRemoteDataSource;
 const nsIStringBundleService = Components.interfaces.nsIStringBundleService;
 const nsIRDFResource = Components.interfaces.nsIRDFResource;
 const nsIRDFLiteral = Components.interfaces.nsIRDFLiteral;
@@ -46,12 +46,8 @@ const nsIObserverService = Components.interfaces.nsIObserverService;
 const nsIBookmarksService = Components.interfaces.nsIBookmarksService;
 const nsIGlobalHistory2 = Components.interfaces.nsIGlobalHistory2;
 const nsIBrowserHistory = Components.interfaces.nsIBrowserHistory;
-const nsIIOService = Components.interfaces.nsIIOService;
 const nsIPrefService = Components.interfaces.nsIPrefService;
 const nsIPrefBranchInternal = Components.interfaces.nsIPrefBranchInternal;
-const nsIProperties = Components.interfaces.nsIProperties;
-const nsILocalFile = Components.interfaces.nsILocalFile;
-const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
 
 
 //// Namespace constants
@@ -59,28 +55,11 @@ const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
 const NCNS = 'http://home.netscape.com/NC-rdf#';
 const WEBNS = 'http://home.netscape.com/WEB-rdf#';
 const RDFNS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-const HTMLNS = 'http://www.w3.org/1999/xhtml';
 const XULNS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
-const MYPORTALNS = 'http://www.unroutable.org/rdf';
-
-
-//// Notification topics
-
-const livemarkUpdateEndedTopic = 'myportal-livemark-update-ended'; // matches value in MyPortalLivemarkUpdater
-const livemarkUpdateEndedNoFadeTopic = 'myportal-livemark-update-ended-nofade'; // matches value in MyPortalLivemarkUpdater
-const bookmarkUpdatedTopic = 'myportal-bookmark-updated'; // matches value in myportal.js
-const bookmarkStructureUpdatedTopic = 'myportal-bookmark-structure-updated'; // matches value in myportal.js
-const forceRefreshTopic = 'myportal-force-refresh'; // matches value in myportal.js
-const bookmarksObserverNotifyTopic = 'myportal-bookmarksobserver-notify';
-const bookmarksObserverUpdatedTopic = 'myportal-bookmarksobserver-updated';
-const bookmarksObserverStructureUpdatedTopic = 'myportal-bookmarksobserver-structure-updated';
-const historyObserverUpdatedTopic = 'myportal-historyobserver-updated';
-const shutdownTopic = 'xpcom-shutdown';
 
 
 //// Data sources
 
-var myportalDataSource = null;
 var bookmarksDataSource = null;
 var historyDataSource = null;
 
@@ -92,17 +71,14 @@ var rdfService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService
 var containerUtils = Components.classes['@mozilla.org/rdf/container-utils;1'].getService(nsIRDFContainerUtils);
 var stringBundleService = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(nsIStringBundleService);
 var observerService = Components.classes['@mozilla.org/observer-service;1'].getService(nsIObserverService);
-var ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(nsIIOService);
-var globalHistoryService = Components.classes['@mozilla.org/browser/global-history;2'].getService(nsIGlobalHistory2);
-var browserHistoryService = Components.classes['@mozilla.org/browser/global-history;2'].getService(nsIBrowserHistory);
 var preferencesService = Components.classes['@mozilla.org/preferences-service;1'].getService(nsIPrefService);
-var directoryService = Components.classes['@mozilla.org/file/directory_service;1'].getService(nsIProperties);
 
 
 //// RDF resources
 
+// TODO use nsIMyPortalRDFService
+
 var RDF_BOOKMARKS_ROOT = rdfService.GetResource('NC:BookmarksRoot');
-var RDF_HISTORY_ROOT = rdfService.GetResource('NC:HistoryRoot');
 var RDF_ID = rdfService.GetResource(NCNS + 'ID');
 var RDF_NAME = rdfService.GetResource(NCNS + 'Name');
 var RDF_URL = rdfService.GetResource(NCNS + 'URL');
@@ -114,12 +90,8 @@ var RDF_LIVEMARKEXPIRATION = rdfService.GetResource(NCNS + 'LivemarkExpiration')
 var RDF_BOOKMARKSEPARATOR = rdfService.GetResource(NCNS + 'BookmarkSeparator');
 var RDF_ICON = rdfService.GetResource(NCNS + 'Icon');
 var RDF_TYPE = rdfService.GetResource(RDFNS + 'type');
-var RDF_SEQ = rdfService.GetResource(RDFNS + 'Seq');
 var RDF_LASTVISITDATE = rdfService.GetResource(WEBNS + 'LastVisitDate');
 var RDF_DATE = rdfService.GetResource(NCNS + 'Date');
-var RDF_CHILD = rdfService.GetResource(NCNS + 'child');
-var RDF_LASTMODIFIEDDATE = rdfService.GetResource(WEBNS + 'LastModifiedDate');
-var RDF_MYPORTAL_COLLAPSED_ROOT = rdfService.GetResource(MYPORTALNS + '/collapsed/all');
 
 
 //// Preference globals
@@ -138,8 +110,58 @@ var automaticallyUpdatePortal = null;
 var stringBundle = stringBundleService.createBundle('chrome://myportal/locale/myportal.properties');
 
 
+
+//// RDF Observer
+
+function RDFObserver()
+{
+        this.enabled = false;
+        this.dataSource = null;
+        this.observer = null;
+}
+
+RDFObserver.prototype =
+{
+        // Set the data source to observe.
+        //
+        // dataSource: nsIRDFDataSource
+        setDataSource: function(dataSource)
+        {
+                this.dataSource = dataSource;
+        },
+
+        // Set the observer.
+        //
+        // observer: nsIRDFObserver
+        setObserver: function(observer)
+        {
+                this.observer = observer;
+        },
+
+        // Enable observation of the data source
+        enable: function()
+        {
+                if (!this.enabled) {
+                        this.dataSource.AddObserver(this.observer);
+                        this.enabled = true;
+                }
+        },
+
+        // Disable observation of the data source
+        disable: function()
+        {
+                if (this.enabled) {
+                        this.dataSource.RemoveObserver(this.observer);
+                        this.enabled = false;
+                }
+        }
+};
+
+
+
 //// nsMyPortalService
 // Implements:
+// nsIMyPortalService
 // nsIObserver
 // nsISupports
 
@@ -153,7 +175,11 @@ function nsMyPortalService()
         historyDataSource = rdfService.GetDataSource('rdf:history');
 
         // Init My Portal data source
-        myportalDataSource = new MyPortalDataSource();
+        this.myportalDataSource = Components.classes['@unroutable.org/myportal-datasource;1'].getService(nsIMyPortalDataSource);
+
+        // Init history services
+        this.globalHistoryService = Components.classes['@mozilla.org/browser/global-history;2'].getService(nsIGlobalHistory2);
+        this.browserHistoryService = this.globalHistoryService.QueryInterface(nsIBrowserHistory);
 
         // Load bookmarks
         var bookmarksService = bookmarksDataSource.QueryInterface(nsIBookmarksService);
@@ -179,16 +205,28 @@ function nsMyPortalService()
         // Init history observer
         this.initHistoryObserver();
 
+        // Init notification topics
+        var topicService = Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(nsIMyPortalNotificationTopicService);
+        this.bookmarksObserverNotifyTopic = topicService.topic('bookmarksObserverNotify');
+        this.bookmarksObserverUpdatedTopic = topicService.topic('bookmarksObserverUpdated');
+        this.bookmarksObserverStructureUpdatedTopic = topicService.topic('bookmarksObserverStructureUpdated');
+        this.historyObserverUpdatedTopic = topicService.topic('historyObserverUpdated');
+        this.livemarkUpdateEndedNoFadeTopic = topicService.topic('livemarkUpdateEndedNoFade');
+        this.forceRefreshTopic = topicService.topic('forceRefresh');
+        this.bookmarkUpdatedTopic = topicService.topic('bookmarkUpdated');
+        this.bookmarkStructureUpdatedTopic = topicService.topic('bookmarkStructureUpdated');
+        this.shutdownTopic = topicService.topic('shutdown');
+
         // Observe bookmark changes
         this.bookmarksObserver.enable();
         this.historyObserver.enable();
-        observerService.addObserver(this, bookmarksObserverNotifyTopic, false);
-        observerService.addObserver(this, bookmarksObserverUpdatedTopic, false);
-        observerService.addObserver(this, bookmarksObserverStructureUpdatedTopic, false);
-        observerService.addObserver(this, historyObserverUpdatedTopic, false);
+        observerService.addObserver(this, this.bookmarksObserverNotifyTopic, false);
+        observerService.addObserver(this, this.bookmarksObserverUpdatedTopic, false);
+        observerService.addObserver(this, this.bookmarksObserverStructureUpdatedTopic, false);
+        observerService.addObserver(this, this.historyObserverUpdatedTopic, false);
 
         // Observe application quit
-        observerService.addObserver(this, shutdownTopic, false);
+        observerService.addObserver(this, this.shutdownTopic, false);
 
         // Observe preferences changes
         this.prefsInternal.addObserver('', this, false);
@@ -203,41 +241,32 @@ nsMyPortalService.prototype =
         {
                 this.bookmarksObserver.disable();
                 this.historyObserver.disable();
-                myportalDataSource.flush();
-                observerService.removeObserver(this, bookmarksObserverNotifyTopic);
-                observerService.removeObserver(this, bookmarksObserverUpdatedTopic);
-                observerService.removeObserver(this, bookmarksObserverStructureUpdatedTopic);
-                observerService.removeObserver(this, historyObserverUpdatedTopic);
-                observerService.removeObserver(this, shutdownTopic);
+                this.myportalDataSource.flush();
+                observerService.removeObserver(this, this.bookmarksObserverNotifyTopic);
+                observerService.removeObserver(this, this.bookmarksObserverUpdatedTopic);
+                observerService.removeObserver(this, this.bookmarksObserverStructureUpdatedTopic);
+                observerService.removeObserver(this, this.historyObserverUpdatedTopic);
+                observerService.removeObserver(this, this.shutdownTopic);
                 this.prefsInternal.removeObserver('', this);
         },
 
-        // Inits bookmarks observer.
+
         initBookmarksObserver: function()
         {
-                this.bookmarksObserver = new myportalBookmarksObserver();
-                this.bookmarksObserver.enable = function()
-                {
-                        bookmarksDataSource.AddObserver(this);
-                };
-                this.bookmarksObserver.disable = function()
-                {
-                        bookmarksDataSource.RemoveObserver(this);
-                };
+                var observer = Components.classes['@unroutable.org/myportal-bookmarks-observer;1'].createInstance(nsIMyPortalBookmarksObserver);
+                observer.setDelay(500);
+
+                this.bookmarksObserver = new RDFObserver();
+                this.bookmarksObserver.setDataSource(bookmarksDataSource);
+                this.bookmarksObserver.setObserver(observer);
         },
 
-        // Inits history observer.
         initHistoryObserver: function()
         {
-                this.historyObserver = new myportalHistoryObserver();
-                this.historyObserver.enable = function()
-                {
-                        historyDataSource.AddObserver(this);
-                };
-                this.historyObserver.disable = function()
-                {
-                        historyDataSource.RemoveObserver(this);
-                };
+                var observer = Components.classes['@unroutable.org/myportal-history-observer;1'].createInstance(nsIMyPortalHistoryObserver);
+                this.historyObserver = new RDFObserver();
+                this.historyObserver.setDataSource(historyDataSource);
+                this.historyObserver.setObserver(observer);
         },
 
 
@@ -425,7 +454,7 @@ nsMyPortalService.prototype =
                         this.historyObserver.enable();
 
                         // Redraw
-                        observerService.notifyObservers(this, livemarkUpdateEndedNoFadeTopic, nodeId);
+                        observerService.notifyObservers(this, this.livemarkUpdateEndedNoFadeTopic, nodeId);
                 }
         },
 
@@ -506,8 +535,8 @@ nsMyPortalService.prototype =
         addURL: function(url)
         {
                 var uri = ioService.newURI(url, null, null);
-                if (!globalHistoryService.isVisited(uri)) {
-                        globalHistoryService.addURI(uri, false, true, null);
+                if (!this.globalHistoryService.isVisited(uri)) {
+                        this.globalHistoryService.addURI(uri, false, true, null);
                 }
         },
 
@@ -517,7 +546,7 @@ nsMyPortalService.prototype =
         removeURL: function(url)
         {
                 var uri = ioService.newURI(url, null, null);
-                browserHistoryService.removePage(uri);
+                this.browserHistoryService.removePage(uri);
         },
 
 
@@ -538,7 +567,7 @@ nsMyPortalService.prototype =
         {
                 var collapsed = this.isCollapsed(folderNode);
                 this.setCollapsed(node, folderNode, !collapsed);
-                myportalDataSource.setCollapsed(nodeId, !collapsed);
+                this.myportalDataSource.setCollapsed(nodeId, !collapsed);
         },
 
         // Returns true if a bookmark folder is collapsed.
@@ -620,7 +649,7 @@ nsMyPortalService.prototype =
                     name == 'increaseRecentlyVisitedSize') {
 
                         // Force reload
-                        observerService.notifyObservers(this, forceRefreshTopic, null);
+                        observerService.notifyObservers(this, this.forceRefreshTopic, null);
                 }
         },
 
@@ -631,33 +660,33 @@ nsMyPortalService.prototype =
                           topic,
                           data)
         {
-                if (topic == bookmarksObserverNotifyTopic) {
+                if (topic == this.bookmarksObserverNotifyTopic) {
                         this.bookmarksTree.dirty = true;
-                } else if (topic == bookmarksObserverUpdatedTopic) {
-                        this.bookmarksTree.dirty = true;
-                        if (automaticallyUpdatePortal) {
-                                // data: id
-                                observerService.notifyObservers(this, bookmarkUpdatedTopic, data);
-                        }
-                } else if (topic == bookmarksObserverStructureUpdatedTopic) {
+                } else if (topic == this.bookmarksObserverUpdatedTopic) {
                         this.bookmarksTree.dirty = true;
                         if (automaticallyUpdatePortal) {
                                 // data: id
-                                observerService.notifyObservers(this, bookmarkStructureUpdatedTopic, data);
+                                observerService.notifyObservers(this, this.bookmarkUpdatedTopic, data);
                         }
-                } else if (topic == historyObserverUpdatedTopic) {
+                } else if (topic == this.bookmarksObserverStructureUpdatedTopic) {
+                        this.bookmarksTree.dirty = true;
+                        if (automaticallyUpdatePortal) {
+                                // data: id
+                                observerService.notifyObservers(this, this.bookmarkStructureUpdatedTopic, data);
+                        }
+                } else if (topic == this.historyObserverUpdatedTopic) {
                         // data: URL
                         var ids = this.getIdsForURL(data);
                         if (ids.length) {
                                 this.bookmarksTree.dirty = true;
                                 ids.forEach(function(id) {
-                                        observerService.notifyObservers(this, bookmarkUpdatedTopic, id);
+                                        observerService.notifyObservers(this, this.bookmarkUpdatedTopic, id);
                                 }, this);
                         }
                 } else if (topic == 'nsPref:changed') {
                         // data: preference name
                         this.handlePreferenceChange(data);
-                } else if (topic == shutdownTopic) {
+                } else if (topic == this.shutdownTopic) {
                         this.unload();
                 }
         },
@@ -1459,6 +1488,7 @@ BookmarkContainerNode.prototype.render = function(document,
                 var link = this.createLink(document, this, this.folderHeadingLinkClass);
 
                 // Set collapsed attributes
+                var myportalDataSource = Components.classes['@unroutable.org/myportal-datasource;1'].getService(nsIMyPortalDataSource);
                 if (myportalDataSource.isCollapsed(this.id)) {
                         myportalService.setCollapsed(collapseButton, folderContents, true);
                 }
@@ -1820,6 +1850,14 @@ var nsMyPortalServiceModule =
                                                 type);
         },
 
+        unregisterSelf: function(compMgr,
+                                 location,
+                                 type)
+        {
+                compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
+                compMgr.unregisterFactoryLocation(MYPORTALSERVICE_CID, location);
+        },
+
         getClassObject: function(compMgr,
                                  cid,
                                  iid)
@@ -1851,530 +1889,9 @@ var nsMyPortalServiceModule =
         }
 };
 
-
 // XPCOM module entry point
 function NSGetModule(compMgr,
                      fileSpec)
 {
         return nsMyPortalServiceModule;
 }
-
-
-//// My Portal Notification Timer
-// Implements:
-// nsITimerCallback
-//
-// Timer that notifies observers about RDF updates.
-// Using a timer delays notification until some time passes without an RDF update occurring.
-// This avoids excessive rebuilding of the bookmarks tree data structure.
-
-// Constructor.
-//
-// topic: notification topic
-// delay: nsITimer delay (ms)
-// type: nsITimer type
-function myportalNotificationTimer(topic,
-                                   delay,
-                                   type)
-{
-        this.topic = topic || null;
-        this.delay = delay || 1000;
-        this.type = type || nsITimer.TYPE_ONE_SHOT;
-
-        this.timer = Components.classes['@mozilla.org/timer;1'].createInstance(nsITimer);
-        this.running = false;
-
-        this.notificationLists = new Array();
-}
-
-myportalNotificationTimer.prototype =
-{
-        // Starts timer.
-        start: function()
-        {
-                this.timer.initWithCallback(this, this.delay, this.type);
-                this.running = true;
-        },
-
-        // Cancels timer.
-        cancel: function()
-        {
-                if (this.running) {
-                        this.timer.cancel();
-                        this.running = false;
-                }
-        },
-
-        // Cancels and restarts timer.
-        reset: function()
-        {
-                this.cancel();
-                this.start();
-        },
-
-        // Adds a notification list to timer.
-        addNotificationList: function(list)
-        {
-                this.notificationLists.push(list);
-        },
-
-        // Cancels timer, clears notification lists, and notifies with timer's topic.
-        // Called when a batch RDF update completes and portals are completely reloaded.
-        flush: function()
-        {
-                this.cancel();
-                this.notificationLists.forEach(function(list) {
-                        list.clear();
-                });
-                this.notify();
-        },
-
-
-        //// nsITimerCallback methods
-
-        notify: function()
-        {
-                this.cancel();
-
-                // Notify with timer topic
-                observerService.notifyObservers(this, this.topic, null);
-
-                // For each list, notify with list's topic for each item
-                this.notificationLists.forEach(function(list) {
-                        for (var j in list.data) {
-                                observerService.notifyObservers(this, list.topic, j);
-                        }
-                        list.clear();
-                }, this);
-        }
-};
-
-
-//// My Portal Update Notifier
-//
-// Records updated bookmark ids and possibily notifies observers about changed bookmarks.
-//
-// pushBegin is called when a bookmark attribute like id, name, or URL
-// is modified.
-//
-// pushEnd is called upon completion of bookmark attribute changes,
-// i.e. when a bookmark's last modified date is updated.  Because a
-// bookmark's last modified date is also updated for other reasons,
-// such as when bookmarks are reordered, notification occurs in
-// pushEnd only if pushBegin has previously been called for the given
-// bookmark id.
-
-// Constructor.
-//
-// topic: notification topic
-function myportalUpdateNotifier(topic)
-{
-        this.topic = topic;
-        this.data = new Object();
-}
-
-myportalUpdateNotifier.prototype =
-{
-        pushBegin: function(id)
-        {
-                this.data[id] = true;
-        },
-
-        // Notifies observers with id if pushBegin was previously called with the same id.
-        // Returns true if notification sent.
-        pushEnd: function(id)
-        {
-                if (this.data[id]) {
-                        observerService.notifyObservers(this, this.topic, id);
-                        delete(this.data[id]);
-                        return true;
-                }
-                return false;
-        }
-};
-
-
-//// My Portal Notification List
-//
-// myportalNotificationTimer uses a list to notify observers with the list's topic for each list item.
-
-// Constructor.
-//
-// topic: notification topic
-function myportalNotificationList(topic)
-{
-        this.topic = topic;
-        this.clear();
-}
-
-myportalNotificationList.prototype =
-{
-        // Clears list.
-        clear: function()
-        {
-                this._data = new Object();
-        },
-
-        // Adds id to list.
-        add: function(id)
-        {
-                this._data[id] = true;
-        },
-
-        // Removes id from list.
-        remove: function(id)
-        {
-                delete this._data[id];
-        },
-
-        // Returns data object.
-        get data()
-        {
-                return this._data;
-        }
-};
-
-
-//// My Portal Bookmarks Observer
-// Implements:
-// nsIRDFObserver
-
-// Constructor.
-//
-// delay: time after RDF update to notify (ms)
-function myportalBookmarksObserver(delay)
-{
-        this.delay = delay || 500;
-
-        // Base RDF structure predicate
-        this.rdfPredicate = RDFNS.substr(0, RDFNS.length - 1);
-
-        // Create notification timer
-        this.notificationTimer = new myportalNotificationTimer(bookmarksObserverNotifyTopic, this.delay);
-
-        // Create notification lists
-        this.updatedRDFStructureIds = new myportalNotificationList(bookmarksObserverStructureUpdatedTopic);
-        this.updatedLivemarkIds = new myportalNotificationList(livemarkUpdateEndedTopic);
-
-        // Add notification lists to timer
-        this.notificationTimer.addNotificationList(this.updatedRDFStructureIds);
-        this.notificationTimer.addNotificationList(this.updatedLivemarkIds);
-
-        // Create update notifier
-        this.updatedQueue = new myportalUpdateNotifier(bookmarksObserverUpdatedTopic);
-}
-
-myportalBookmarksObserver.prototype =
-{
-        // Returns true if a predicate is a bookmark attribute.
-        //
-        // predicate: RDF predicate
-        isBookmarkAttribute: function(predicate)
-        {
-                return (predicate == RDF_LASTVISITDATE ||
-                        predicate == RDF_NAME ||
-                        predicate == RDF_URL ||
-                        predicate == RDF_DESCRIPTION ||
-                        predicate == RDF_ID);
-        },
-
-
-        //// nsIRDFObserver methods
-
-        onAssert: function(ds,
-                           source,
-                           predicate,
-                           target)
-        {
-                if (this.isBookmarkAttribute(predicate)) {
-
-                        // Bookmark attribute changed
-                        this.updatedQueue.pushBegin(source.Value);
-                } else if (predicate == RDF_LIVEMARKEXPIRATION) {
-
-                        // Livemark update ended
-                        this.updatedLivemarkIds.add(source.Value);
-                        this.updatedRDFStructureIds.remove(source.Value);
-                        this.notificationTimer.reset();
-                } else if (predicate == RDF_LASTMODIFIEDDATE) {
-
-                        // Last modified date added
-                        if (this.updatedQueue.pushEnd(source.Value)) {
-                                this.notificationTimer.reset();
-                        }
-                } else if (predicate == RDF_ICON) {
-
-                        // Favicon added
-                        // Force update, because updating favicon doesn't update last modified date
-                        this.updatedQueue.pushBegin(source.Value);
-                        if (this.updatedQueue.pushEnd(source.Value)) {
-                                this.notificationTimer.reset();
-                        }
-                } else {
-                        var splitPredicate = predicate.Value.split('#');
-                        if (splitPredicate[0] == this.rdfPredicate) {
-
-                                // RDF structure changed
-                                this.updatedRDFStructureIds.add(source.Value);
-                                this.notificationTimer.reset();
-                        }
-                }
-        },
-
-        onUnassert: function(ds,
-                             source,
-                             predicate,
-                             target)
-        {
-                if (this.isBookmarkAttribute(predicate)) {
-
-                        // Bookmark attribute changed
-                        this.updatedQueue.pushBegin(source.Value);
-                } else if (predicate == RDF_ICON) {
-
-                        // Favicon removed
-                        // Force update, because updating favicon doesn't update last modified date
-                        this.updatedQueue.pushBegin(source.Value);
-                        if (this.updatedQueue.pushEnd(source.Value)) {
-                                this.notificationTimer.reset();
-                        }
-                } else if (predicate.Value.split('#')[0] == this.rdfPredicate) {
-
-                        // RDF structure changed
-                        this.updatedRDFStructureIds.add(source.Value);
-                        this.notificationTimer.reset();
-                }
-        },
-
-        onChange: function(ds,
-                           source,
-                           predicate,
-                           oldTarget,
-                           newTarget)
-        {
-                if (this.isBookmarkAttribute(predicate)) {
-
-                        // Bookmark attribute changed
-                        this.updatedQueue.pushBegin(source.Value);
-                } else if (predicate == RDF_LIVEMARKEXPIRATION) {
-
-                        // Livemark update ended
-                        this.updatedLivemarkIds.add(source.Value);
-
-                        // Avoid updating livemarks twice
-                        this.updatedRDFStructureIds.remove(source.Value);
-
-                        this.notificationTimer.reset();
-                } else if (predicate == RDF_LASTMODIFIEDDATE) {
-
-                        // Last modified date changed
-                        if (this.updatedQueue.pushEnd(source.Value)) {
-                                this.notificationTimer.reset();
-                        }
-                } else if (predicate == RDF_ICON) {
-
-                        // Favicon changed
-                        // Force update, because updating favicon doesn't update last modified date
-                        this.updatedQueue.pushBegin(source.Value);
-                        if (this.updatedQueue.pushEnd(source.Value)) {
-                                this.notificationTimer.reset();
-                        }
-                }
-        },
-
-        onMove: function(ds,
-                         oldSource,
-                         newSource,
-                         predicate,
-                         target) {},
-
-        onBeginUpdateBatch: function(ds) {},
-
-        onEndUpdateBatch: function(ds) {
-
-                // Force refresh
-                this.notificationTimer.flush();
-                observerService.notifyObservers(this, forceRefreshTopic, null);
-        }
-};
-
-
-//// My Portal History Observer
-// Implements:
-// nsIRDFObserver
-
-// Constructor.
-function myportalHistoryObserver() {}
-
-myportalHistoryObserver.prototype =
-{
-        // Notifies observers with a URL.
-        //
-        // url: URL
-        notify: function(url)
-        {
-                observerService.notifyObservers(this, historyObserverUpdatedTopic, url);
-        },
-
-
-        //// nsIRDFObserver methods
-
-        onAssert: function(ds,
-                           source,
-                           predicate,
-                           target)
-        {
-                // URL's date added
-                if (predicate == RDF_DATE) {
-                        this.notify(source.Value);
-                }
-        },
-
-        onUnassert: function(ds,
-                             source,
-                             predicate,
-                             target)
-        {
-                // URL removed from history
-                if ((source == RDF_HISTORY_ROOT) && (predicate == RDF_CHILD)) {
-                        if (target instanceof nsIRDFResource) {
-                                this.notify(target.Value);
-                        }
-                }
-        },
-
-        onChange: function(ds,
-                           source,
-                           predicate,
-                           oldTarget,
-                           newTarget)
-        {
-                // URL's date changed
-                if (predicate == RDF_DATE) {
-                        this.notify(source.Value);
-                }
-        },
-
-        onMove: function(ds,
-                         oldSource,
-                         newSource,
-                         predicate,
-                         target) {},
-
-        onBeginUpdateBatch: function(ds) {},
-
-        onEndUpdateBatch: function(ds) {}
-};
-
-
-//// My Portal Data Source
-
-// Constructor.
-function MyPortalDataSource()
-{
-        this._open();
-}
-
-MyPortalDataSource.prototype =
-{
-        filename: 'myportal.rdf',
-
-        // Get profile path.
-        _getProfilePath: function()
-        {
-                return directoryService.get('ProfD', nsILocalFile);
-        },
-
-        // Get URL for datasource file.
-        // See http://kb.mozillazine.org/File_IO
-        _getURL: function()
-        {
-                // Create file
-                var file = this._getProfilePath();
-                file.append(this.filename);
-                if (!file.exists()) {
-                        file.create(nsILocalFile.NORMAL_FILE_TYPE, 0664);
-                }
-
-                // Get file URL
-                var fileHandler = ioService.getProtocolHandler('file').QueryInterface(nsIFileProtocolHandler);
-                var url = fileHandler.getURLSpecFromFile(file);
-                return url;
-        },
-
-        // Open datasource.
-        _open: function()
-        {
-                var url = this._getURL();
-                this.ds = rdfService.GetDataSourceBlocking(url);
-                this.collapsedContainer = Components.classes['@mozilla.org/rdf/container;1'].createInstance(nsIRDFContainer);
-                containerUtils.MakeBag(this.ds, RDF_MYPORTAL_COLLAPSED_ROOT);
-                this.collapsedContainer.Init(this.ds, RDF_MYPORTAL_COLLAPSED_ROOT);
-        },
-
-        // Check if a container contains a node.
-        //
-        // container: the container
-        // node: the node to search for
-        _contains: function(container,
-                            node)
-        {
-                return (-1 != container.IndexOf(node));
-        },
-
-        // Insert a node into a container.
-        //
-        // container: the container
-        // node: the node to insert
-        _insert: function(container,
-                          node)
-        {
-                container.AppendElement(node);
-        },
-
-        // Remove a node from a container.
-        //
-        // container: the container
-        // node: the node to remove
-        _remove: function(container,
-                          node)
-        {
-                container.RemoveElement(node, true);
-        },
-
-        // Flush the datasource to disk.
-        flush: function()
-        {
-                this.ds.QueryInterface(nsIRDFRemoteDataSource);
-                this.ds.Flush();
-        },
-
-        // Check if a bookmark folder is collapsed.
-        //
-        // nodeId: the bookmark folder id
-        isCollapsed: function(nodeId)
-        {
-                var node = rdfService.GetLiteral(nodeId);
-                return this._contains(this.collapsedContainer, node);
-        },
-
-        // Sets a bookmark folder's collapsed state.
-        //
-        // nodeId: the bookmark folder id
-        // collapsed: the collapsed state
-        setCollapsed: function(nodeId,
-                               collapsed)
-        {
-                var node = rdfService.GetLiteral(nodeId);
-                var exists = this._contains(this.collapsedContainer, node);
-                if (collapsed) {
-                        if (!exists) {
-                                this._insert(this.collapsedContainer, node);
-                        }
-                } else {
-                        if (exists) {
-                                this._remove(this.collapsedContainer, node);
-                        }
-                }
-        }
-};

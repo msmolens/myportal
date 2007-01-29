@@ -25,13 +25,6 @@
 
 var myportal =
 {
-        //// Topics
-
-        bookmarkUpdatedTopic: 'myportal-bookmark-updated', // matches value in nsMyPortalService.js
-        bookmarkStructureUpdatedTopic: 'myportal-bookmark-structure-updated', // matches value in nsMyPortalService.js
-        forceRefreshTopic: 'myportal-force-refresh', // matches value in nsMyPortalService.js
-
-
         //// Ids and attributes
         myportalBodyId: 'myportalBody', // matches value in myportal.html
         folderHeadingLinkAttribute: 'folderHeadingLink', // matches value in BookmarkContainerNode
@@ -89,6 +82,12 @@ var myportal =
 
                 // Render bookmarks
                 this.renderBookmarks();
+
+                // Init notification topics
+                var topicService =  Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(Components.interfaces.nsIMyPortalNotificationTopicService);
+                this.bookmarkUpdatedTopic = topicService.topic('bookmarkUpdated');
+                this.bookmarkStructureUpdatedTopic = topicService.topic('bookmarkStructureUpdated');
+                this.forceRefreshTopic = topicService.topic('forceRefresh');
 
                 // Init livemark updater and register livemark update observers
                 this.livemarkUpdater = new MyPortalLivemarkUpdater(this.prefs, this);

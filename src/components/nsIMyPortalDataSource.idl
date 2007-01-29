@@ -1,0 +1,31 @@
+/* nsIMyPortalDataSource.idl
+ * Copyright (C) 2005-2007 Max Smolens
+ *
+ * This file is part of My Portal.
+ *
+ * My Portal is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * My Portal is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with My Portal; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ */
+
+#include "nsISupports.idl"
+
+
+[scriptable, uuid(30a962fb-83bf-4685-a891-faa1e2cd6ba4)]
+interface nsIMyPortalDataSource : nsISupports
+{
+        void flush();
+        boolean isCollapsed(in string nodeId);
+        void setCollapsed(in string nodeId, in boolean collapsed);
+};
