@@ -22,10 +22,16 @@
 //// My Portal Custom Style Sheet
 //
 // Custom style sheet operations.
+//
+// Implements:
+// nsIObserver
 
 function MyPortalCustomStyleSheet()
 {
         this.prefs = Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService);
+
+        // Register preference observer
+        this.prefs.addObserver('', this, false);
 }
 
 MyPortalCustomStyleSheet.prototype =
@@ -37,6 +43,11 @@ MyPortalCustomStyleSheet.prototype =
 
 
         //// Methods
+
+        unload: function()
+        {
+                this.prefs.removeObserver('', this);
+        },
 
         update: function()
         {
@@ -82,6 +93,21 @@ MyPortalCustomStyleSheet.prototype =
                 fstream.close();
 
                 return css;
+        },
+
+
+        //// nsIObserver methods
+
+        observe: function(subject,
+                          topic,
+                          data)
+        {
+                if (topic == 'nsPref:changed') {
+                        if (data == 'useCustomStyleSheet' ||
+                            data == 'customStyleSheetFilename') {
+                                    this.update();
+                            }
+                }
         },
 
 

@@ -39,7 +39,6 @@ var myportal =
 
         myportalService: Components.classes['@unroutable.org/myportal-service;1'].getService(Components.interfaces.nsIMyPortalService),
         observerService: Components.classes['@mozilla.org/observer-service;1'].getService(Components.interfaces.nsIObserverService),
-        prefService: Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService),
 
 
         //// Methods
@@ -97,9 +96,6 @@ var myportal =
 
                 // Register force refresh observer
                 this.observerService.addObserver(this, this.forceRefreshTopic, false);
-
-                // Register preference observer
-                this.prefService.addObserver('', this, false);
         },
 
         // Unloads My Portal.
@@ -114,10 +110,14 @@ var myportal =
                 this.observerService.removeObserver(this, this.bookmarkUpdatedTopic);
                 this.observerService.removeObserver(this, this.bookmarkStructureUpdatedTopic);
                 this.observerService.removeObserver(this, this.forceRefreshTopic);
-                this.prefService.removeObserver('', this);
+
+                // Unload elements
+                this.logo.unload();
+                this.image.unload();
+                this.colorStyleSheet.unload();
+                this.customStyleSheet.unload();
 
                 // Aid garbage collection
-                this.prefService = null;
                 this.colorStyleSheet = null;
                 this.customStyleSheet = null;
                 this.logo = null;
@@ -230,22 +230,6 @@ var myportal =
                 return node;
         },
 
-        // Handles preference changes.
-        //
-        // name: changed preference
-        handlePreferenceChange: function(name)
-        {
-                if (name == 'displayImage' || name == 'imageFilename') {
-                        this.image.update();
-                } else if (name == 'displayLogo') {
-                        this.logo.update();
-                } else if (name == 'matchSystemTheme' || name == 'folderHeadingTextColor' || name == 'folderHeadingBackgroundColor') {
-                        this.colorStyleSheet.update();
-                } else if (name == 'useCustomStyleSheet' || name == 'customStyleSheetFilename') {
-                        this.customStyleSheet.update();
-                }
-        },
-
 
         //// nsIObserver methods
 
@@ -257,8 +241,6 @@ var myportal =
                         this.updatePortalOrReload(data);
                 } else if (topic == this.bookmarkStructureUpdatedTopic) {
                         this.updatePortal(data);
-                } else if (topic == 'nsPref:changed') {
-                        this.handlePreferenceChange(data);
                 } else if (topic == this.forceRefreshTopic) {
                         this.renderBookmarks();
                 }

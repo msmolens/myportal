@@ -22,10 +22,16 @@
 //// My Portal Logo
 //
 // Logo operations.
+//
+// Implements:
+// nsIObserver
 
 function MyPortalLogo()
 {
         this.prefs = Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService);
+
+        // Register preference observer
+        this.prefs.addObserver('', this, false);
 }
 
 MyPortalLogo.prototype =
@@ -39,6 +45,11 @@ MyPortalLogo.prototype =
 
 
         //// Methods
+
+        unload: function()
+        {
+                this.prefs.removeObserver('', this);
+        },
 
         // Adds or removes logo.
         update: function()
@@ -69,6 +80,21 @@ MyPortalLogo.prototype =
 
                 link.appendChild(image);
                 return link;
+        },
+
+
+        //// nsIObserver methods
+
+        observe: function(subject,
+                          topic,
+                          data)
+        {
+                if (topic == 'nsPref:changed') {
+                        if (data == 'displayLogo' ||
+                            data == 'logoFilename') {
+                                    this.update();
+                            }
+                }
         },
 
 

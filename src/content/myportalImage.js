@@ -22,11 +22,17 @@
 //// My Portal Image
 //
 // Customizable image.
+//
+// Implements:
+// nsIObserver
 
 function MyPortalImage()
 {
         this.prefs = Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService);
         this.image = document.getElementById(this.myportalImageId);
+
+        // Register preference observer
+        this.prefs.addObserver('', this, false);
 }
 
 MyPortalImage.prototype =
@@ -38,6 +44,11 @@ MyPortalImage.prototype =
 
 
         //// Methods
+
+        unload: function()
+        {
+                this.prefs.removeObserver('', this);
+        },
 
         update: function()
         {
@@ -72,6 +83,21 @@ MyPortalImage.prototype =
         show: function()
         {
                 this.image.style.visibility = 'visible';
+        },
+
+
+        //// nsIObserver methods
+
+        observe: function(subject,
+                          topic,
+                          data)
+        {
+                if (topic == 'nsPref:changed') {
+                        if (data == 'displayImage' ||
+                            data == 'imageFilename') {
+                                    this.update();
+                            }
+                }
         },
 
 

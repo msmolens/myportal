@@ -22,10 +22,16 @@
 //// My Portal Color Style Sheet
 //
 // Color style sheet operations.
+//
+// Implements:
+// nsIObserver
 
 function MyPortalColorStyleSheet()
 {
         this.prefs = Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService);
+
+        // Register preference observer
+        this.prefs.addObserver('', this, false);
 }
 
 MyPortalColorStyleSheet.prototype =
@@ -37,6 +43,11 @@ MyPortalColorStyleSheet.prototype =
 
 
         //// Methods
+
+        unload: function()
+        {
+                this.prefs.removeObserver('', this);
+        },
 
         // Sets folder heading colors.
         update: function()
@@ -62,6 +73,22 @@ MyPortalColorStyleSheet.prototype =
                 folderHeadingRule.style.color = folderHeadingTextColor;
                 folderHeadingLinkRule.style.color = folderHeadingTextColor;
                 folderHeadingRule.style.backgroundColor = folderHeadingBackgroundColor;
+        },
+
+
+        //// nsIObserver methods
+
+        observe: function(subject,
+                          topic,
+                          data)
+        {
+                if (topic == 'nsPref:changed') {
+                        if (data == 'matchSystemTheme' ||
+                            data == 'folderHeadingTextColor' ||
+                            data == 'folderHeadingBackgroundColor') {
+                                    this.update();
+                            }
+                }
         },
 
 
