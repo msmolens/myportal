@@ -48,6 +48,7 @@ const nsIGlobalHistory2 = Components.interfaces.nsIGlobalHistory2;
 const nsIBrowserHistory = Components.interfaces.nsIBrowserHistory;
 const nsIPrefService = Components.interfaces.nsIPrefService;
 const nsIPrefBranchInternal = Components.interfaces.nsIPrefBranchInternal;
+const nsIIOService = Components.interfaces.nsIIOService;
 
 
 //// Namespace constants
@@ -72,6 +73,7 @@ var containerUtils = Components.classes['@mozilla.org/rdf/container-utils;1'].ge
 var stringBundleService = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(nsIStringBundleService);
 var observerService = Components.classes['@mozilla.org/observer-service;1'].getService(nsIObserverService);
 var preferencesService = Components.classes['@mozilla.org/preferences-service;1'].getService(nsIPrefService);
+var ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(nsIIOService);
 
 
 //// RDF resources

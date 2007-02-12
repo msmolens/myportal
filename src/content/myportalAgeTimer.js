@@ -25,12 +25,9 @@
 //
 // Ages visited links by re-rendering them every time the timer fires.
 
-// Constructor.
-//
-// prefs: preference service
-function MyPortalAgeTimer(prefs)
+function MyPortalAgeTimer()
 {
-        this.prefs = prefs;
+        this.prefs = Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService);
         this.timer = Components.classes['@mozilla.org/timer;1'].createInstance(Components.interfaces.nsITimer);
 }
 

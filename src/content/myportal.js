@@ -39,7 +39,7 @@ var myportal =
 
         myportalService: Components.classes['@unroutable.org/myportal-service;1'].getService(Components.interfaces.nsIMyPortalService),
         observerService: Components.classes['@mozilla.org/observer-service;1'].getService(Components.interfaces.nsIObserverService),
-        preferencesService: Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService),
+        prefService: Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService),
 
 
         //// Methods
@@ -47,9 +47,6 @@ var myportal =
         // Loads My Portal.
         load: function()
         {
-                this.prefs = this.preferencesService.getBranch('myportal.');
-                this.prefsInternal = this.prefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-
                 // Get path by stripping protocol and all slashes from URL
                 this.path = document.location.href.slice('myportal:'.length);
                 this.path = this.path.replace(/^\/*/, '');
@@ -58,24 +55,24 @@ var myportal =
                 this.rootNodeId = this.myportalService.getIdForPath(this.path);
 
                 // Update style sheets
-                this.colorStyleSheet = new MyPortalColorStyleSheet(this.prefs);
+                this.colorStyleSheet = new MyPortalColorStyleSheet();
                 this.colorStyleSheet.update();
-                this.customStyleSheet = new MyPortalCustomStyleSheet(this.prefs);
+                this.customStyleSheet = new MyPortalCustomStyleSheet();
                 this.customStyleSheet.update();
 
                 // Init logo
-                this.logo = new MyPortalLogo(this.prefs);
+                this.logo = new MyPortalLogo();
                 this.logo.update();
 
                 // Init image
-                this.image = new MyPortalImage(this.prefs);
+                this.image = new MyPortalImage();
                 this.image.update();
 
                 // Init smart bookmark handler
                 this.smartBookmarkHandler = new MyPortalSmartBookmarkHandler();
 
                 // Init age timer
-                this.ageTimer = new MyPortalAgeTimer(this.prefs);
+                this.ageTimer = new MyPortalAgeTimer();
 
                 // Init collapser
                 this.collapser = new MyPortalCollapser();
@@ -90,7 +87,7 @@ var myportal =
                 this.forceRefreshTopic = topicService.topic('forceRefresh');
 
                 // Init livemark updater and register livemark update observers
-                this.livemarkUpdater = new MyPortalLivemarkUpdater(this.prefs, this);
+                this.livemarkUpdater = new MyPortalLivemarkUpdater(this);
                 this.observerService.addObserver(this.livemarkUpdater, this.livemarkUpdater.livemarkUpdateEndedTopic, false);
                 this.observerService.addObserver(this.livemarkUpdater, this.livemarkUpdater.livemarkUpdateEndedNoFadeTopic, false);
 
@@ -102,7 +99,7 @@ var myportal =
                 this.observerService.addObserver(this, this.forceRefreshTopic, false);
 
                 // Register preference observer
-                this.prefsInternal.addObserver('', this, false);
+                this.prefService.addObserver('', this, false);
         },
 
         // Unloads My Portal.
@@ -117,11 +114,10 @@ var myportal =
                 this.observerService.removeObserver(this, this.bookmarkUpdatedTopic);
                 this.observerService.removeObserver(this, this.bookmarkStructureUpdatedTopic);
                 this.observerService.removeObserver(this, this.forceRefreshTopic);
-                this.prefsInternal.removeObserver('', this);
+                this.prefService.removeObserver('', this);
 
                 // Aid garbage collection
-                this.prefs = null;
-                this.prefsInternal = null;
+                this.prefService = null;
                 this.colorStyleSheet = null;
                 this.customStyleSheet = null;
                 this.logo = null;

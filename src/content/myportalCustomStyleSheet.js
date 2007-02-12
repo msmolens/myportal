@@ -23,12 +23,9 @@
 //
 // Custom style sheet operations.
 
-// Constructor.
-//
-// prefs: preferences service
-function MyPortalCustomStyleSheet(prefs)
+function MyPortalCustomStyleSheet()
 {
-        this.prefs = prefs;
+        this.prefs = Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService);
 }
 
 MyPortalCustomStyleSheet.prototype =

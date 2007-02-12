@@ -2,7 +2,7 @@
 
 <!--
 myportalPreferences.xul
-Copyright (C) 2005 Max Smolens
+Copyright (C) 2005-2007 Max Smolens
 
 This file is part of My Portal.
 
@@ -38,7 +38,7 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
             buttonlabelextra1="&button.defaults;"
             buttonaccesskeyextra1="&button.defaults.accesskey;"
             ondialogextra1="myportalPreferences.loadDefaults();"
-            onload="myportalPreferences.init();"
+            onload="myportalPreferences.window = window;"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- Appearance Pane -->
@@ -87,7 +87,12 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
     </preferences>
 
-    <script type="application/x-javascript" src="chrome://myportal/content/myportalPreferences.js"/>
+    <script type="application/x-javascript">
+    <![CDATA[
+             var myportalPreferences = Components.classes['@unroutable.org/myportal-preferences-util;1'].createInstance(Components.interfaces.nsIMyPortalPreferencesUtil);
+             myportalPreferences.window = window;
+    ]]>
+    </script>
 
     <!-- Folder Colors -->
     <groupbox>
@@ -102,8 +107,8 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
                     preference="matchSystemTheme"
                     label="&matchSystemTheme;"
                     accesskey="&matchSystemTheme.accesskey;"
-                    onsyncfrompreference="return myportalPreferences.updateDisabled('matchSystemTheme', 'folderHeadingTextColorLabel, folderHeadingBackgroundColorLabel, folderHeadingTextColorPicker, folderHeadingBackgroundColorPicker', true);"
-                    onsynctopreference="return myportalPreferences.updateDisabled('matchSystemTheme', 'folderHeadingTextColorLabel, folderHeadingBackgroundColorLabel, folderHeadingTextColorPicker, folderHeadingBackgroundColorPicker', true);"/>
+                    onsyncfrompreference="myportalPreferences.updateDisabled('matchSystemTheme', 'folderHeadingTextColorLabel, folderHeadingBackgroundColorLabel, folderHeadingTextColorPicker, folderHeadingBackgroundColorPicker', true);"
+                    onsynctopreference="myportalPreferences.updateDisabled('matchSystemTheme', 'folderHeadingTextColorLabel, folderHeadingBackgroundColorLabel, folderHeadingTextColorPicker, folderHeadingBackgroundColorPicker', true);"/>
 
           <row align="center">
             <label id="folderHeadingTextColorLabel"
@@ -146,8 +151,8 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
                 preference="displayImage"
                 label="&displayImage;"
                 accesskey="&displayImage.accesskey;"
-                onsyncfrompreference="return myportalPreferences.updateDisabled('displayImage', 'imageFilenameTextbox, displayImageButton');"
-                onsynctopreference="return myportalPreferences.updateDisabled('displayImage', 'imageFilenameTextbox, displayImageButton');"/>
+                onsyncfrompreference="myportalPreferences.updateDisabled('displayImage', 'imageFilenameTextbox, displayImageButton', false);"
+                onsynctopreference="myportalPreferences.updateDisabled('displayImage', 'imageFilenameTextbox, displayImageButton', false);"/>
       <hbox>
         <spacer width="23"/>
         <textbox id="imageFilenameTextbox"
@@ -168,8 +173,8 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
                 preference="useCustomStyleSheet"
                 label="&useCustomStyleSheet;"
                 accesskey="&useCustomStyleSheet.accesskey;"
-                onsyncfrompreference="return myportalPreferences.updateDisabled('useCustomStyleSheet', 'customStyleSheetFilenameTextbox, useCustomStyleSheetButton');"
-                onsynctopreference="return myportalPreferences.updateDisabled('useCustomStyleSheet', 'customStyleSheetFilenameTextbox, useCustomStyleSheetButton');"
+                onsyncfrompreference="myportalPreferences.updateDisabled('useCustomStyleSheet', 'customStyleSheetFilenameTextbox, useCustomStyleSheetButton', false);"
+                onsynctopreference="myportalPreferences.updateDisabled('useCustomStyleSheet', 'customStyleSheetFilenameTextbox, useCustomStyleSheetButton', false);"
                 flex="1"/>
       <label value="&useCustomStyleSheet.template.description;"
              onclick="openDialog('chrome://browser/content/browser.xul', '_blank', 'chrome,all,dialog=no', 'chrome://myportal/content/css/template.css', null, null);"
@@ -274,12 +279,12 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
                   preference="truncateBookmarkNames"
                   label="&truncateBookmarkNames;"
                   accesskey="&truncateBookmarkNames.accesskey;"
-                  onsyncfrompreference="return myportalPreferences.updateDisabled('truncateBookmarkNames', 'truncateBookmarkNamesLengthTextbox');"
-                  onsynctopreference="return myportalPreferences.updateDisabled('truncateBookmarkNames', 'truncateBookmarkNamesLengthTextbox');"/>
+                  onsyncfrompreference="myportalPreferences.updateDisabled('truncateBookmarkNames', 'truncateBookmarkNamesLengthTextbox', false);"
+                  onsynctopreference="myportalPreferences.updateDisabled('truncateBookmarkNames', 'truncateBookmarkNamesLengthTextbox', false);"/>
         <textbox id="truncateBookmarkNamesLengthTextbox"
                  preference="truncateBookmarkNamesLength"
                  size="2"
-                 onsynctopreference="return myportalPreferences.verifyLimit('truncateBookmarkNamesLengthTextbox');"/>
+                 onsynctopreference="return myportalPreferences.clampMin('truncateBookmarkNamesLengthTextbox');"/>
         <label id="truncateBookmarkNamesLengthLabel"
                value="&truncateBookmarkNamesLengthUnits;"
                accesskey="&truncateBookmarkNamesLengthUnits.accesskey;"
@@ -304,12 +309,12 @@ Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
                   preference="openFolderConfirm"
                   label="&openFolderConfirm;"
                   accesskey="&openFolderConfirm.accesskey;"
-                  onsyncfrompreference="myportalPreferences.updateDisabled('openFolderConfirm', 'openFolderLimitTextbox');"
-                  onsynctopreference="myportalPreferences.updateDisabled('openFolderConfirm', 'openFolderLimitTextbox');"/>
+                  onsyncfrompreference="myportalPreferences.updateDisabled('openFolderConfirm', 'openFolderLimitTextbox', false);"
+                  onsynctopreference="myportalPreferences.updateDisabled('openFolderConfirm', 'openFolderLimitTextbox', false);"/>
         <textbox id="openFolderLimitTextbox"
                  preference="openFolderLimit"
                  size="2"
-                 onsynctopreference="return myportalPreferences.verifyLimit('openFolderLimitTextbox');"/>
+                 onsynctopreference="return myportalPreferences.clampMin('openFolderLimitTextbox');"/>
         <label id="openFolderLimitLabel"
                value="&openFolderConfirmUnits;"
                accesskey="&openFolderConfirmUnits.accesskey;"

@@ -1,0 +1,79 @@
+/* nsIMyPortalPreferencesUtil.idl
+ * Copyright (C) 2005-2007 Max Smolens
+ *
+ * This file is part of My Portal.
+ *
+ * My Portal is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * My Portal is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with My Portal; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMDocument;
+interface nsIDOMEvent;
+interface nsIDOMWindow;
+
+[scriptable, uuid(c6142357-549a-4d76-8d63-302f349316a4)]
+interface nsIMyPortalPreferencesUtil : nsISupports
+{
+        /**
+         * DOM window on which to operate.
+         */
+        attribute nsIDOMWindow window;
+
+        /**
+         * Load default preferences.
+         */
+        void loadDefaults();
+
+        /**
+         * Update the 'disabled' attribute for elements based on that
+         * of another element.
+         *
+         * @param preferenceId parent element id
+         * @param updateIdList comma-separated list of dependent element ids
+         * @param invert       if true, disable dependent elements if
+         *                     parent element is selected
+         */
+        void updateDisabled(in ACString preferenceId,
+                            in ACString updateIdList,
+                            in boolean invert);
+
+        /**
+         * Clamp an element's value to be greater than or equal to a
+         * minimum value.
+         *
+         * @param id  element id
+         * @param min minimum allowed value
+         *
+         * @return the clamped value
+         */
+        boolean clampMin(in ACString id,
+                          in long min);
+
+        /**
+         * Open a file picker to choose a custom image.
+         *
+         * @param event triggering event
+         */
+        void browseCustomImage(in nsIDOMEvent event);
+
+        /**
+         * Open a file picker to choose a custom style sheet.
+         *
+         * @param event triggering event
+         */
+        void browseCustomStyleSheet(in nsIDOMEvent event);
+};

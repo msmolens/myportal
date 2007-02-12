@@ -23,12 +23,9 @@
 //
 // Logo operations.
 
-// Constructor.
-//
-// prefs: preferences service
-function MyPortalLogo(prefs)
+function MyPortalLogo()
 {
-        this.prefs = prefs;
+        this.prefs = Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService);
 }
 
 MyPortalLogo.prototype =

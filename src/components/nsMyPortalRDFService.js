@@ -202,7 +202,6 @@ var nsMyPortalRDFServiceModule =
         }
 };
 
-
 // XPCOM module entry point
 function NSGetModule(compMgr,
                      fileSpec)

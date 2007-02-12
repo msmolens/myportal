@@ -27,12 +27,10 @@
 
 // Constructor.
 //
-// prefs: preferences service
 // myportal: myportal object
-function MyPortalLivemarkUpdater(prefs,
-                                 myportal)
+function MyPortalLivemarkUpdater(myportal)
 {
-        this.prefs = prefs;
+        this.prefs = Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService);
         this.myportal = myportal;
 
         // Init notification topics

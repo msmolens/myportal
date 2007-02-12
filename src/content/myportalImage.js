@@ -23,12 +23,9 @@
 //
 // Customizable image.
 
-// Constructor.
-//
-// prefs: preferences service
-function MyPortalImage(prefs)
+function MyPortalImage()
 {
-        this.prefs = prefs;
+        this.prefs = Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService);
         this.image = document.getElementById(this.myportalImageId);
 }
 

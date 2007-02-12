@@ -1,0 +1,89 @@
+/* nsIMyPortalPreferencesService.idl
+ * Copyright (C) 2005-2007 Max Smolens
+ *
+ * This file is part of My Portal.
+ *
+ * My Portal is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * My Portal is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with My Portal; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ */
+
+
+#include "nsISupports.idl"
+
+interface nsIObserver;
+
+[scriptable, uuid(23350f88-e161-4643-869b-d68f0f1243f8)]
+interface nsIMyPortalPreferencesService : nsISupports
+{
+        /**
+         * Get the value of a boolean preference.
+         *
+         * @see nsIPrefBranch
+         */
+        boolean getBoolPref(in ACString name);
+
+        /**
+         * Set the value of a boolean preference.
+         *
+         * @see nsIPrefBranch
+         */
+        void setBoolPref(in ACString name,
+                         in boolean value);
+
+        /**
+         * Get the value of a string preference.
+         *
+         * @see nsIPrefBranch
+         */
+        ACString getCharPref(in ACString name);
+
+        /**
+         * Set the value of a string preference.
+         *
+         * @see nsIPrefBranch
+         */
+        void setCharPref(in ACString name,
+                         in ACString value);
+
+        /**
+         * Get the value of an integer preference.
+         *
+         * @see nsIPrefBranch
+         */
+        long getIntPref(in ACString name);
+
+        /**
+         * Set the value of an integer preference.
+         *
+         * @see nsIPrefBranch
+         */
+        void setIntPref(in ACString name,
+                        in long value);
+
+        /**
+         * Add a preference change observer.
+         *
+         * @see nsIPrefBranch2
+         */
+        void addObserver(in ACString domain,
+                         in nsIObserver observer);
+        /**
+         * Remove a preference change observer.
+         *
+         * @see nsIPrefBranch2
+         */
+        void removeObserver(in ACString domain,
+                            in nsIObserver observer);
+};
