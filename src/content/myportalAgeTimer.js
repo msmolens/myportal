@@ -1,5 +1,5 @@
 /* myportalAgeTimer.js
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2007 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -28,7 +28,6 @@
 function MyPortalAgeTimer()
 {
         this.prefs = Components.classes['@unroutable.org/myportal-preferences-service;1'].getService(Components.interfaces.nsIMyPortalPreferencesService);
-        this.timer = Components.classes['@mozilla.org/timer;1'].createInstance(Components.interfaces.nsITimer);
 }
 
 MyPortalAgeTimer.prototype =
@@ -45,7 +44,7 @@ MyPortalAgeTimer.prototype =
         {
                 var millisecondsDelay = 1000 * this.ageVisitedLinksDelay;
                 if (millisecondsDelay > 0) {
-                        this.timer.cancel();
+                        this.timer = Components.classes['@mozilla.org/timer;1'].createInstance(Components.interfaces.nsITimer);
                         this.timer.initWithCallback(this, millisecondsDelay, Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
                 }
         },
@@ -54,6 +53,7 @@ MyPortalAgeTimer.prototype =
         cancel: function()
         {
                 this.timer.cancel();
+                this.timer = null;
         },
 
 
