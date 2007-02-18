@@ -21,7 +21,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMDocument;
 interface nsIDOMEvent;
 interface nsIDOMWindow;
 
