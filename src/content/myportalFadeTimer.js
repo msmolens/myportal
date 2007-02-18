@@ -47,20 +47,23 @@ function MyPortalFadeTimer(parent,
                 this.notifyFunction = notifyFunction;
                 this.delay = delay || 25;
                 this.step = step || 0.05;
-                this.timer = Components.classes['@mozilla.org/timer;1'].createInstance(Components.interfaces.nsITimer);
         }
 }
 
 // Starts timer.
 MyPortalFadeTimer.prototype.start = function()
 {
+        this.timer = Components.classes['@mozilla.org/timer;1'].createInstance(Components.interfaces.nsITimer);
         this.timer.initWithCallback(this, this.delay, Components.interfaces.nsITimer.TYPE_REPEATING_PRECISE);
 };
 
 // Cancels timer.
 MyPortalFadeTimer.prototype.cancel = function()
 {
-        this.timer.cancel();
+        if (this.timer) {
+                this.timer.cancel();
+                this.timer = null;
+        }
 };
 
 
