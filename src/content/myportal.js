@@ -54,9 +54,12 @@ var myportal =
                 this.rootNodeId = this.myportalService.getIdForPath(this.path);
 
                 // Update style sheets
-                this.colorStyleSheet = new MyPortalColorStyleSheet();
+                this.colorStyleSheet = Components.classes['@unroutable.org/myportal-color-stylesheet;1'].createInstance(Components.interfaces.nsIMyPortalColorStyleSheet);
+                this.colorStyleSheet.setStyleSheet(document.styleSheets[1]);
                 this.colorStyleSheet.update();
-                this.customStyleSheet = new MyPortalCustomStyleSheet();
+
+                this.customStyleSheet = Components.classes['@unroutable.org/myportal-custom-stylesheet;1'].createInstance(Components.interfaces.nsIMyPortalCustomStyleSheet);
+                this.customStyleSheet.setStyle(document.getElementById('customStyleSheet'));
                 this.customStyleSheet.update();
 
                 // Init logo
