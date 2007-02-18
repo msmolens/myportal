@@ -1,0 +1,57 @@
+/* nsIMyPortalImage.idl
+ * Copyright (C) 2005-2007 Max Smolens
+ *
+ * This file is part of My Portal.
+ *
+ * My Portal is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * My Portal is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with My Portal; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMHTMLImageElement;
+
+[scriptable, uuid(6ed723d1-79d1-41c4-a296-1c043e6d6713)]
+interface nsIMyPortalImage : nsISupports
+{
+        /**
+         * Visibility.
+         */
+        attribute boolean visible;
+
+        /**
+         * Source string.
+         */
+        attribute AString src;
+
+        /**
+         * Set the image on which to operate.
+         *
+         * @param image the image
+         *
+         * @note should be called immediately after construction
+         */
+        void setImage(in nsIDOMHTMLImageElement image);
+
+        /**
+         * Show or hide the image according to the preferences.
+         */
+        void update();
+
+        /**
+         * Unload.
+         */
+        void unload();
+};

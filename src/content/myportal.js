@@ -60,11 +60,13 @@ var myportal =
                 this.customStyleSheet.update();
 
                 // Init logo
-                this.logo = new MyPortalLogo();
+                this.logo = Components.classes['@unroutable.org/myportal-logo;1'].createInstance(Components.interfaces.nsIMyPortalLogo);
+                this.logo.setDocument(document);
                 this.logo.update();
 
                 // Init image
-                this.image = new MyPortalImage();
+                this.image = Components.classes['@unroutable.org/myportal-image;1'].createInstance(Components.interfaces.nsIMyPortalImage);
+                this.image.setImage(document.getElementById('myportalImage'));
                 this.image.update();
 
                 // Init smart bookmark handler
@@ -141,7 +143,7 @@ var myportal =
                 if (!this.pathNodeIds) {
 
                         // Hide image on error
-                        this.image.hide();
+                        this.image.visible = false;
                 } else {
 
                         // Start age timer
