@@ -289,9 +289,11 @@ nsMyPortalService.prototype =
                 var documentFragment = document.createDocumentFragment();
                 var node = this.bookmarksTree.findFolderById(nodeId);
                 if (node) {
-                        node.render(document, documentFragment, true);
-                        documentTitle += node.title;
-                        pathNodeIds = node.pathNodeIds.join(',');
+                        var renderer = new Renderer(document, documentFragment, true);
+                        node.accept(renderer);
+
+                        documentTitle += renderer.title;
+                        pathNodeIds = renderer.pathNodeIds.join(',');
                 } else {
                         // Render error message
                         documentFragment.appendChild(this.createErrorMessage(document));
@@ -322,7 +324,8 @@ nsMyPortalService.prototype =
                 var documentFragment = document.createDocumentFragment();
 
                 // Re-render node
-                bookmarkNode.render(document, documentFragment, isPortalRoot);
+                var renderer = new Renderer(document, documentFragment, isPortalRoot);
+                bookmarkNode.accept(renderer);
 
                 return documentFragment;
         },
@@ -360,7 +363,9 @@ nsMyPortalService.prototype =
                         for (var id in nodes) {
                                 obj = nodes[id];
                                 if (obj.node) {
-                                        obj.node.render(document, documentFragment, false);
+
+                                        var renderer = new Renderer(document, documentFragment, false);
+                                        obj.node.accept(renderer);
 
                                         // New link is documentFragment's first child
                                         obj.link.parentNode.replaceChild(documentFragment.firstChild, obj.link);
@@ -819,6 +824,541 @@ BookmarksTree.prototype =
 };
 
 
+//// Utility functions
+
+// Convert date in microseconds to days.
+//
+// date: microseconds since epoch
+function toDays(date)
+{
+        // Convert microseconds to ms
+        date *= 0.001;
+
+        // Get current date in ms
+        var now = (new Date()).valueOf();
+
+        // Return difference in days
+        return ((now - date) / 86400000); // divisor: ms in a day
+}
+
+//
+// Truncate string at maximum length and append an ellipsis.
+//
+// name: string
+function truncate(name)
+{
+        if (truncateBookmarkNames && (name.length > truncateBookmarkNamesLength)) {
+                name = name.slice(0, truncateBookmarkNamesLength);
+                name = name.replace(/\s*$/, stringBundle.GetStringFromName('ellipsis'));
+        }
+        return name;
+}
+
+// Sets node's description as tooltip
+//
+// node: bookmark node whose description to use
+// element: element to set tooltip on
+function setTooltip(node,
+                    element)
+{
+        var description = node.description;
+        if (description) {
+                element.title = description;
+        }
+}
+
+//// My Portal Renderer
+function Renderer(document,
+                  parent,
+                  portalRoot)
+{
+        this.document = document;
+
+        this.parents = new Array();
+        this.parents.push(parent);
+
+        this.portalRoot = portalRoot;
+
+        this._title = '';
+        this._pathNodeIds = new Array();
+
+        this.bookmarkContainerRenderer = new BookmarkContainerRenderer(this.document);
+}
+
+Renderer.prototype.__defineGetter__('parent', function()
+{
+        return this.parents[this.parents.length - 1];
+});
+
+Renderer.prototype.__defineSetter__('title', function(title)
+{
+        this._title = title;
+});
+
+Renderer.prototype.__defineGetter__('title', function()
+{
+        return this._title;
+});
+
+Renderer.prototype.__defineSetter__('pathNodeIds', function(pathNodeIds)
+{
+        this._pathNodeIds = pathNodeIds;
+});
+
+Renderer.prototype.__defineGetter__('pathNodeIds', function()
+{
+        return this._pathNodeIds;
+});
+
+Renderer.prototype.visitGeneralBookmarkNode = function(node)
+{
+        var parent = this.parent;
+
+        // Create link
+        var link = this.document.createElement('a');
+        link.href = node.url;
+
+        // Set tooltip
+        if (showDescriptionTooltips) {
+                setTooltip(node, link);
+        }
+
+        // Set target to open in new tab or window
+        if (openLinksNewTabOrWindow) {
+                link.setAttribute('target', '_blank');
+        }
+
+        var name = truncate(node.name);
+        var text = this.document.createTextNode(name);
+        link.appendChild(text);
+
+        // Set favicon
+        var icon = node.icon;
+        if (showFavicons && icon)
+        {
+                // Insert icon and link into a container
+                var image = this.document.createElement('img');
+                image.src = icon;
+                image.className = 'favicon';
+
+                var container = this.document.createElement('span');
+                container.className = 'faviconLinkContainer';
+                container.appendChild(image);
+                container.appendChild(link);
+
+                // Assign container id
+                container.id = node.id;
+                parent.appendChild(container);
+        }
+        else
+        {
+                link.id = node.id;
+                parent.appendChild(link);
+        }
+
+        // Separator forces line wrapping
+        var separator = this.document.createElementNS(XULNS, 'separator');
+        parent.appendChild(separator);
+
+        return link;
+}
+
+Renderer.prototype.visitedPastDayClass = 'visitedPastDay';
+Renderer.prototype.visitedPastTwoDaysClass = 'visitedPastTwoDays';
+Renderer.prototype.visitedPastThreeDaysClass = 'visitedPastThreeDays';
+Renderer.prototype.visitedPastWeekClass = 'visitedPastWeek';
+
+Renderer.prototype.visitNormalBookmarkNode = function(node)
+{
+        // Call superclass's render method
+        var link = this.visitGeneralBookmarkNode(node);
+
+        // Set class based on last visit date
+        if (increaseRecentlyVisitedSize) {
+                var lastVisitDate = node.historyDate || node.lastVisitDate;
+                if (lastVisitDate) {
+                        var age = toDays(lastVisitDate);
+                        if (age < 1.0) {
+                                // Visited within past day
+                                link.className = this.visitedPastDayClass;
+                        } else if (age < 2.0) {
+                                // Visited within past two days
+                                link.className = this.visitedPastTwoDaysClass;
+                        } else if (age < 3.0) {
+                                // Visited within past three days
+                                link.className = this.visitedPastThreeDaysClass;
+                        } else if (age < 7.0) {
+                                // Visited within past week
+                                link.className = this.visitedPastWeekClass;
+                        }
+                }
+        }
+}
+
+Renderer.prototype.livemarkLinkClass = 'livemarkLink';
+
+Renderer.prototype.visitLivemarkBookmarkNode = function(node)
+{
+        // Call superclass's render method
+        var link = this.visitGeneralBookmarkNode(node);
+
+        // Mark as livemark item
+        link.className = this.livemarkLinkClass;
+}
+
+Renderer.prototype.textboxIdAttribute = 'textboxId';
+Renderer.prototype.smartBookmarkClass = 'smartbookmark';
+Renderer.prototype.textboxClass = 'textbox';
+
+Renderer.prototype.visitSmartBookmarkNode = function(node)
+{
+        var box = this.document.createElementNS(XULNS, 'hbox');
+        box.className = this.smartBookmarkClass;
+
+        var form = this.document.createElement('form');
+
+        var textbox = this.document.createElement('input');
+        textbox.type = 'text';
+        textbox.id = node.id;
+        textbox.className = this.textboxClass;
+        textbox.setAttribute('size', 30);
+        textbox.setAttribute('url', node.url);
+
+        var button = this.document.createElementNS(XULNS, 'button');
+        button.setAttribute(this.textboxIdAttribute, textbox.id);
+        button.id = 'button:' + node.id;
+
+        var command = 'try {return myportal.smartBookmarkHandler.load(event);} catch (e) {return false;}';
+
+        button.setAttribute('oncommand', command);
+        button.setAttribute('onclick', command);
+        var icon = node.icon;
+        if (icon) {
+                button.setAttribute('image', icon);
+        }
+        var name = truncate(node.name);
+        button.setAttribute('label', name);
+
+        // Set tooltip
+        if (showDescriptionTooltips) {
+                var description = node.description;
+                if (description) {
+                        button.setAttribute('tooltiptext', description);
+                }
+        }
+
+        box.appendChild(textbox);
+        box.appendChild(button);
+
+        var formCommand = 'javascript:try {myportal.smartBookmarkHandler.submit(\'' + textbox.id + '\');} catch (e) {}';
+        form.setAttribute('action', formCommand);
+        form.appendChild(box);
+
+        var div = this.document.createElement('div');
+        div.appendChild(form);
+        this.parent.appendChild(div);
+}
+
+Renderer.prototype.separatorClass = 'bookmarkSeparator';
+
+Renderer.prototype.visitBookmarkSeparatorNode = function(node)
+{
+        var separator = this.document.createElement('div');
+        separator.className = this.separatorClass;
+        this.parent.appendChild(separator);
+}
+
+Renderer.prototype.visitBookmarkContainerNode = function(node,
+                                                         livemark)
+{
+        var portalRoot = this.portalRoot;
+        this.bookmarkContainerRenderer.portalRoot = portalRoot;
+
+        var container = this.bookmarkContainerRenderer.render(node, this.parent, livemark);
+
+        this.portalRoot = false;
+
+        if (portalRoot)
+        {
+                this.title = this.bookmarkContainerRenderer.title;
+                this.bookmarkContainerRenderer.title = '';
+
+                this.pathNodeIds = this.bookmarkContainerRenderer.pathNodeIds;
+                this.bookmarkContainerRenderer.pathNodeIds = null;
+        }
+
+        // Render children
+        this.parents.push(container);
+        node.children.forEach(function(child) {
+                child.accept(this);
+        }, this);
+        this.parents.pop();
+
+}
+
+Renderer.prototype.visitBookmarkFolderNode = function(node)
+{
+        this.visitBookmarkContainerNode(node, false);
+}
+
+Renderer.prototype.visitLivemarkNode = function(node)
+{
+        this.visitBookmarkContainerNode(node, true);
+}
+
+
+//// Bookmark container renderer
+
+function BookmarkContainerRenderer(document)
+{
+        this.document = document;
+
+        this._portalRoot = false;
+
+        this.livemarkHeaderRenderer = new LivemarkHeaderRenderer(this.document);
+}
+
+BookmarkContainerRenderer.prototype.__defineSetter__('portalRoot', function(portalRoot)
+{
+        this._portalRoot = portalRoot;
+});
+
+BookmarkContainerRenderer.prototype.__defineGetter__('portalRoot', function()
+{
+        return this._portalRoot;
+});
+
+BookmarkContainerRenderer.prototype.collapseButtonClass = 'collapseButton';
+BookmarkContainerRenderer.prototype.emptyFolderNoteClass = 'emptyFolderNote';
+BookmarkContainerRenderer.prototype.folderAttribute = 'folder';
+BookmarkContainerRenderer.prototype.folderClass = 'folder';
+BookmarkContainerRenderer.prototype.folderContentsClass = 'folderContents';
+BookmarkContainerRenderer.prototype.folderHeadingClass = 'folderHeading';
+BookmarkContainerRenderer.prototype.folderHeadingLinkAttribute = 'folderHeadingLink';
+BookmarkContainerRenderer.prototype.folderHeadingLinkClass = 'folderHeadingLink';
+BookmarkContainerRenderer.prototype.nodeIdAttribute = 'nodeId';
+
+BookmarkContainerRenderer.prototype.render = function(node,
+                                                      parent,
+                                                      livemark)
+{
+        // folder
+        //   folderheading
+        //     folder name
+        //   foldercontents
+        //     bookmarks
+
+        // Create folder heading
+        var folderHeading = this.document.createElement('div');
+        folderHeading.className = this.folderHeadingClass;
+
+        // Create folder
+        var folder = this.document.createElement('div');
+        folder.className = this.folderClass;
+
+        // Mark as folder
+        folder.setAttribute(this.folderAttribute, 'true');
+
+        folder.appendChild(folderHeading);
+
+        // Create folder contents
+        var folderContents = this.document.createElement('div');
+        folderContents.className = this.folderContentsClass;
+
+        // Create folder name
+        if (this._portalRoot) {
+                this.createRootFolderHeading(node, folderHeading);
+                this._portalRoot = false;
+        } else {
+                var collapseButton = this.newCollapseButton(node);
+                var link = this.createLink(node, this.folderHeadingLinkClass);
+
+                // Set collapsed attributes
+                var myportalDataSource = Components.classes['@unroutable.org/myportal-datasource;1'].getService(nsIMyPortalDataSource);
+                if (myportalDataSource.isCollapsed(node.id)) {
+                        myportalService.setCollapsed(collapseButton, folderContents, true);
+                }
+
+                folderHeading.appendChild(collapseButton);
+                folderHeading.appendChild(link);
+        }
+
+        // Set livemark-specific attributes
+        if (livemark)
+        {
+                this.livemarkHeaderRenderer.render(node, folderHeading);
+        }
+
+        // Add note to empty folders
+        if (node.isLeaf()) {
+                folderContents.appendChild(this.newEmptyFolderNote());
+        }
+
+        folder.appendChild(folderContents);
+        parent.appendChild(folder);
+
+        return folderContents;
+}
+
+// Create a folder heading including the entire path of a bookmark node.
+//
+// node: BookmarkNode to render
+// folderHeading: folder heading in which to insert items
+BookmarkContainerRenderer.prototype.createRootFolderHeading = function(node,
+                                                                       folderHeading)
+{
+        // Document title
+        this.title = '';
+
+        var previousNode = this.createLink(node, this.folderHeadingLinkClass);
+        folderHeading.appendChild(previousNode);
+
+        // Store id
+        this.pathNodeIds = new Array();
+        this.pathNodeIds.push(previousNode.id);
+
+        // Build document title
+        if (!node.isRoot()) {
+                this.title = previousNode.firstChild.nodeValue;
+        }
+
+        // Add link for each folder in path
+        const pathSeparator = '/';
+        var nextNode = null;
+        var parent = node.parent;
+        while (parent != null) {
+
+                // Insert separator
+                nextNode = this.document.createTextNode(pathSeparator);
+                folderHeading.insertBefore(nextNode, previousNode);
+                previousNode = nextNode;
+
+                // Insert next node
+                nextNode = this.createLink(parent, this.folderHeadingLinkClass);
+                folderHeading.insertBefore(nextNode, previousNode);
+                previousNode = nextNode;
+
+                // Store id
+                this.pathNodeIds.push(previousNode.id);
+
+                // Build document title
+                if (!parent.isRoot()) {
+                        this.title = previousNode.firstChild.nodeValue + pathSeparator + this.title;
+                }
+                parent = parent.parent;
+        }
+}
+
+// Create a folder heading link.
+//
+// node: BookmarkNode to render
+// className: class name of link (optional)
+BookmarkContainerRenderer.prototype.createLink = function(node,
+                                                          className)
+{
+        var link = this.document.createElement('a');
+        link.id = node.id;
+
+        // Mark link as folder heading link for popup handler
+        link.setAttribute(this.folderHeadingLinkAttribute, 'true');
+
+        if (className) {
+                link.className = className;
+        }
+
+        // Get full path of node and strip root bookmark node's name
+        link.href = node.href;
+
+        // Set tooltip
+        if (showDescriptionTooltips) {
+                setTooltip(node, link);
+        }
+
+        var linkText = this.document.createTextNode(node.name);
+        link.appendChild(linkText);
+        return link;
+}
+
+BookmarkContainerRenderer.prototype.newCollapseButton = function(node)
+{
+        // Create button
+        var button = this.document.createElement('button');
+        button.className = this.collapseButtonClass;
+        button.setAttribute(this.nodeIdAttribute, node.id);
+
+        // Set click handler
+        button.setAttribute('onclick', 'try {myportal.collapser.toggle(this);} catch (e) {}');
+
+        // Create image
+        var image = this.document.createElementNS(XULNS, 'image');
+        image.id = 'myportal-' + node.id;
+
+        button.appendChild(image);
+        return button;
+}
+
+BookmarkContainerRenderer.prototype.newEmptyFolderNote = function()
+{
+        var note = this.document.createElement('span');
+        note.className = this.emptyFolderNoteClass;
+        note.appendChild(this.document.createTextNode(stringBundle.GetStringFromName('emptyFolder')));
+        return note;
+}
+
+
+//// Livemark header renderer
+
+function LivemarkHeaderRenderer(document)
+{
+        this.document = document;
+}
+
+LivemarkHeaderRenderer.prototype.livemarkAttribute = 'livemark';
+LivemarkHeaderRenderer.prototype.livemarkFolderHeadingClass = 'livemarkFolderHeading';
+LivemarkHeaderRenderer.prototype.livemarkMarkAsReadButtonClass = 'livemarkMarkAsReadButton';
+LivemarkHeaderRenderer.prototype.livemarkRefreshButtonClass = 'livemarkRefreshButton';
+LivemarkHeaderRenderer.prototype.nodeIdAttribute = 'nodeId';
+
+LivemarkHeaderRenderer.prototype.render = function(node,
+                                                   parent)
+{
+        // Mark link as livemark for popup handler
+        parent.lastChild.setAttribute(this.livemarkAttribute, 'true');
+
+        // Create buttons
+        var markAsReadButton = this.document.createElement('button');
+        markAsReadButton.className = this.livemarkMarkAsReadButtonClass;
+        var refreshButton = this.document.createElement('button');
+        refreshButton.className = this.livemarkRefreshButtonClass;
+
+        // Set button tooltips
+        markAsReadButton.title = stringBundle.GetStringFromName('livemark.markAsRead');
+        refreshButton.title = stringBundle.GetStringFromName('livemark.refresh');
+
+        // Mark each button as livemark for popup handler
+//      markAsReadButton.setAttribute(this.livemarkAttribute, 'true');
+        markAsReadButton.setAttribute(this.nodeIdAttribute, node.id);
+//      refreshButton.setAttribute(this.livemarkAttribute, 'true');
+        refreshButton.setAttribute(this.nodeIdAttribute, node.id);
+
+        // Set click handlers
+        markAsReadButton.setAttribute('onclick', 'try {myportal.livemarkUpdater.markLivemarkAsRead(this);} catch (e) {}');
+        refreshButton.setAttribute('onclick', 'try {myportal.livemarkUpdater.refreshLivemark(this);} catch (e) {}');
+
+        // Add images to buttons
+        var markAsReadImage = this.document.createElementNS(XULNS, 'image');
+        var refreshImage = this.document.createElementNS(XULNS, 'image');
+        markAsReadButton.appendChild(markAsReadImage);
+        refreshButton.appendChild(refreshImage);
+
+        // Add buttons
+        parent.appendChild(markAsReadButton);
+        parent.appendChild(refreshButton);
+
+        parent.className += ' ' + this.livemarkFolderHeadingClass;
+}
+
+
 //// BookmarkNode Factory
 //
 // Creates BookmarkNode instances.
@@ -1071,42 +1611,6 @@ BookmarkNode.prototype =
                         node = node.parent;
                 }
                 return path;
-        },
-
-
-        //// Utility methods
-
-        // Returns the text of a DOM node that contains only a text value.
-        //
-        // node: DOM node
-        getText: function(node)
-        {
-                return node.firstChild.nodeValue;
-        },
-
-        // Truncates string at maximum length and appends an ellipsis.
-        //
-        // name: string
-        truncate: function(name)
-        {
-                if (truncateBookmarkNames && (name.length > truncateBookmarkNamesLength)) {
-                        name = name.slice(0, truncateBookmarkNamesLength);
-                        name = name.replace(/\s*$/, stringBundle.GetStringFromName('ellipsis'));
-                }
-                return name;
-        },
-
-        // Sets node's description as tooltip
-        //
-        // node: bookmark node whose description to use
-        // element: element to set tooltip on
-        setTooltip: function(node,
-                             element)
-        {
-                var description = node.description;
-                if (description) {
-                        element.title = description;
-                }
         }
 }
 
@@ -1128,61 +1632,10 @@ function GeneralBookmarkNode(resource,
 
 GeneralBookmarkNode.prototype = new BookmarkNode;
 
-// Renders a bookmark.
-//
-// document: HTML document
-// parentDOMNode: node at which to append tree
-GeneralBookmarkNode.prototype.render = function(document,
-                                                parentDOMNode)
+GeneralBookmarkNode.prototype.accept = function(visitor)
 {
-        // Create link
-        var link = document.createElement('a');
-        link.href = this.url;
-
-        // Set tooltip
-        if (showDescriptionTooltips) {
-                this.setTooltip(this, link);
-        }
-
-        // Set target to open in new tab or window
-        if (openLinksNewTabOrWindow) {
-                link.setAttribute('target', '_blank');
-        }
-
-        var name = this.truncate(this.name);
-        var text = document.createTextNode(name);
-        link.appendChild(text);
-
-        // Set favicon
-        var icon = this.icon;
-        if (showFavicons && icon)
-        {
-                // Insert icon and link into a container
-                var image = document.createElement('img');
-                image.src = icon;
-                image.className = 'favicon';
-
-                var container = document.createElement('span');
-                container.className = 'faviconLinkContainer';
-                container.appendChild(image);
-                container.appendChild(link);
-
-                // Assign container id
-                container.id = this.id;
-                parentDOMNode.appendChild(container);
-        }
-        else
-        {
-                link.id = this.id;
-                parentDOMNode.appendChild(link);
-        }
-
-        // Separator forces line wrapping
-        var separator = document.createElementNS(XULNS, 'separator');
-        parentDOMNode.appendChild(separator);
-
-        return link;
-};
+        visitor.visitGeneralBookmarkNode(this);
+}
 
 
 //// Normal Bookmark Node
@@ -1201,67 +1654,11 @@ function NormalBookmarkNode(resource,
 }
 
 NormalBookmarkNode.prototype = new GeneralBookmarkNode;
-NormalBookmarkNode.prototype.visitedPastDayClass = 'visitedPastDay';
-NormalBookmarkNode.prototype.visitedPastTwoDaysClass = 'visitedPastTwoDays';
-NormalBookmarkNode.prototype.visitedPastThreeDaysClass = 'visitedPastThreeDays';
-NormalBookmarkNode.prototype.visitedPastWeekClass = 'visitedPastWeek';
 
-// Renders a bookmark.
-//
-// document: HTML document
-// parentDOMNode: node at which to append tree
-NormalBookmarkNode.prototype.render = function(document,
-                                               parentDOMNode)
+NormalBookmarkNode.prototype.accept = function(visitor)
 {
-        // Call superclass's render method
-        var link = this.__proto__.__proto__.render.call(this, document, parentDOMNode);
-
-        // Set class based on last visit date
-        if (increaseRecentlyVisitedSize) {
-                var lastVisitDate = this.historyDate || this.lastVisitDate;
-                if (lastVisitDate) {
-                        var age = this.getAgeInDays(lastVisitDate);
-                        this.setAgeClass(link, age);
-                }
-        }
-};
-
-// Returns a date's floating point age in days.
-//
-// date: number of microseconds since the epoch
-NormalBookmarkNode.prototype.getAgeInDays = function(date)
-{
-        // Convert date to ms
-        date *= 0.001;
-
-        // Get current date in ms
-        var now = (new Date()).valueOf();
-
-        // Return difference in days
-        return ((now - date) / 86400000); // divisor: ms in a day
-};
-
-// Sets an element's class based on its age.
-//
-// element: DOM element
-// age: floating point age in days
-NormalBookmarkNode.prototype.setAgeClass = function(element,
-                                                    age)
-{
-        if (age < 1.0) {
-                // Visited within past day
-                element.className = this.visitedPastDayClass;
-        } else if (age < 2.0) {
-                // Visited within past two days
-                element.className = this.visitedPastTwoDaysClass;
-        } else if (age < 3.0) {
-                // Visited within past three days
-                element.className = this.visitedPastThreeDaysClass;
-        } else if (age < 7.0) {
-                // Visited within past week
-                element.className = this.visitedPastWeekClass;
-        }
-};
+        visitor.visitNormalBookmarkNode(this);
+}
 
 
 //// Livemark Bookmark Node
@@ -1280,21 +1677,11 @@ function LivemarkBookmarkNode(resource,
 }
 
 LivemarkBookmarkNode.prototype = new GeneralBookmarkNode;
-LivemarkBookmarkNode.prototype.livemarkLinkClass = 'livemarkLink';
 
-// Renders a bookmark.
-//
-// document: HTML document
-// parentDOMNode: node at which to append tree
-LivemarkBookmarkNode.prototype.render = function(document,
-                                                 parentDOMNode)
+LivemarkBookmarkNode.prototype.accept = function(visitor)
 {
-        // Call superclass's render method
-        var link = this.__proto__.__proto__.render.call(this, document, parentDOMNode);
-
-        // Mark as livemark item
-        link.className = this.livemarkLinkClass;
-};
+        visitor.visitLivemarkBookmarkNode(this);
+}
 
 
 //// Smart Bookmark Node
@@ -1311,63 +1698,11 @@ function SmartBookmarkNode(resource,
 }
 
 SmartBookmarkNode.prototype = new BookmarkNode;
-SmartBookmarkNode.prototype.textboxIdAttribute = 'textboxId';
-SmartBookmarkNode.prototype.smartBookmarkClass = 'smartbookmark';
-SmartBookmarkNode.prototype.textboxClass = 'textbox';
 
-// Renders a smart bookmark.
-//
-// node: BookmarkNode to render
-// parentDOMNode: node at which to append tree
-SmartBookmarkNode.prototype.render = function(document,
-                                              parentDOMNode)
+SmartBookmarkNode.prototype.accept = function(visitor)
 {
-        var box = document.createElementNS(XULNS, 'hbox');
-        box.className = this.smartBookmarkClass;
-
-        var form = document.createElement('form');
-
-        var textbox = document.createElement('input');
-        textbox.type = 'text';
-        textbox.id = this.id;
-        textbox.className = this.textboxClass;
-        textbox.setAttribute('size', 30);
-        textbox.setAttribute('url', this.url);
-
-        var button = document.createElementNS(XULNS, 'button');
-        button.setAttribute(this.textboxIdAttribute, textbox.id);
-        button.id = 'button:' + this.id;
-
-        var command = 'try {return myportal.smartBookmarkHandler.load(event);} catch (e) {return false;}';
-
-        button.setAttribute('oncommand', command);
-        button.setAttribute('onclick', command);
-        var icon = this.icon;
-        if (icon) {
-                button.setAttribute('image', icon);
-        }
-        var name = this.truncate(this.name);
-        button.setAttribute('label', name);
-
-        // Set tooltip
-        if (showDescriptionTooltips) {
-                var description = this.description;
-                if (description) {
-                        button.setAttribute('tooltiptext', description);
-                }
-        }
-
-        box.appendChild(textbox);
-        box.appendChild(button);
-
-        var formCommand = 'javascript:try {myportal.smartBookmarkHandler.submit(\'' + textbox.id + '\');} catch (e) {}';
-        form.setAttribute('action', formCommand);
-        form.appendChild(box);
-
-        var div = document.createElement('div');
-        div.appendChild(form);
-        parentDOMNode.appendChild(div);
-};
+        visitor.visitSmartBookmarkNode(this);
+}
 
 
 //// Bookmark Separator Node
@@ -1384,19 +1719,11 @@ function BookmarkSeparatorNode(resource,
 }
 
 BookmarkSeparatorNode.prototype = new BookmarkNode;
-BookmarkSeparatorNode.prototype.separatorClass = 'bookmarkSeparator';
 
-// Renders a bookmark separator.
-//
-// node: BookmarkNode to render
-// parentDOMNode: node at which to append tree
-BookmarkSeparatorNode.prototype.render = function(document,
-                                                  parentDOMNode)
+BookmarkSeparatorNode.prototype.accept = function(visitor)
 {
-        var separator = document.createElement('div');
-        separator.className = this.separatorClass;
-        parentDOMNode.appendChild(separator);
-};
+        visitor.visitBookmarkSeparatorNode(this);
+}
 
 
 //// BookmarkContainerNode
@@ -1417,17 +1744,6 @@ function BookmarkContainerNode(resource,
 }
 
 BookmarkContainerNode.prototype = new BookmarkNode;
-BookmarkContainerNode.prototype.nodeIdAttribute= 'nodeId';
-BookmarkContainerNode.prototype.folderAttribute = 'folder';
-BookmarkContainerNode.prototype.folderHeadingLinkAttribute = 'folderHeadingLink';
-BookmarkContainerNode.prototype.livemarkAttribute = 'livemark';
-BookmarkContainerNode.prototype.folderClass = 'folder';
-BookmarkContainerNode.prototype.folderHeadingClass = 'folderHeading';
-BookmarkContainerNode.prototype.folderHeadingLinkClass = 'folderHeadingLink';
-BookmarkContainerNode.prototype.folderContentsClass = 'folderContents';
-BookmarkContainerNode.prototype.livemarkFolderHeadingClass = 'livemarkFolderHeading';
-BookmarkContainerNode.prototype.emptyFolderNoteClass = 'emptyFolderNote';
-BookmarkContainerNode.prototype.collapseButtonClass = 'collapseButton';
 
 // Returns myportal:// href.
 BookmarkContainerNode.prototype.__defineGetter__('href', function()
@@ -1452,189 +1768,10 @@ BookmarkContainerNode.prototype.isLeaf = function()
         return (this.children.length == 0);
 };
 
-// Sets livemark-specific attributes.
-BookmarkContainerNode.prototype.setLivemark = function() {};
-
-BookmarkContainerNode.prototype.render = function(document,
-                                                  parentDOMNode,
-                                                  isPortalRoot)
+BookmarkContainerNode.prototype.accept = function(visitor)
 {
-        // folder
-        //   folderheading
-        //     folder name
-        //   foldercontents
-        //     bookmarks
-
-        // Create folder heading
-        var folderHeading = document.createElement('div');
-        folderHeading.className = this.folderHeadingClass;
-
-        // Create folder
-        var folder = document.createElement('div');
-        folder.className = this.folderClass;
-
-        // Mark as folder
-        folder.setAttribute(this.folderAttribute, 'true');
-
-        folder.appendChild(folderHeading);
-
-        // Create folder contents
-        var folderContents = document.createElement('div');
-        folderContents.className = this.folderContentsClass;
-
-        // Create folder name
-        if (isPortalRoot) {
-                this.createRootFolderHeading(document, folderHeading);
-        } else {
-                var collapseButton = this.createCollapseButton(document, this, this.collapseButtonClass);
-                var link = this.createLink(document, this, this.folderHeadingLinkClass);
-
-                // Set collapsed attributes
-                var myportalDataSource = Components.classes['@unroutable.org/myportal-datasource;1'].getService(nsIMyPortalDataSource);
-                if (myportalDataSource.isCollapsed(this.id)) {
-                        myportalService.setCollapsed(collapseButton, folderContents, true);
-                }
-
-                folderHeading.appendChild(collapseButton);
-                folderHeading.appendChild(link);
-        }
-
-        // Set livemark-specific attributes
-        this.setLivemark(document, folderHeading);
-
-        // Add note to empty folders
-        if (this.isLeaf()) {
-                folderContents.appendChild(this.createEmptyFolderNote(document));
-        }
-
-        // Render children
-        this.renderContents(document, folderContents);
-        folder.appendChild(folderContents);
-        parentDOMNode.appendChild(folder);
-};
-
-// Renders contents of node.
-//
-// document:
-// parentDOMNode:
-BookmarkContainerNode.prototype.renderContents = function(document,
-                                                          parentDOMNode)
-{
-        this.children.forEach(function(child) {
-                child.render(document, parentDOMNode);
-        });
-};
-
-// Creates a folder heading including the entire path of a bookmark node.
-//
-// folderHeading: folder heading in which to insert items
-// node: BookmarkNode to render
-BookmarkContainerNode.prototype.createRootFolderHeading = function(document,
-                                                                   folderHeading)
-{
-        // Document title
-        this.title = '';
-
-        var previousNode = this.createLink(document, this, this.folderHeadingLinkClass);
-        folderHeading.appendChild(previousNode);
-
-        // Store id
-        this.pathNodeIds = new Array();
-        this.pathNodeIds.push(previousNode.id);
-
-        // Build document title
-        if (!this.isRoot()) {
-                this.title = this.getText(previousNode);
-        }
-
-        // Add link for each folder in path
-        const pathSeparator = '/';
-        var nextNode = null;
-        var parent = this.parent;
-        while (parent != null) {
-
-                // Insert separator
-                nextNode = document.createTextNode(pathSeparator);
-                folderHeading.insertBefore(nextNode, previousNode);
-                previousNode = nextNode;
-
-                // Insert next node
-                nextNode = this.createLink(document, parent, this.folderHeadingLinkClass);
-                folderHeading.insertBefore(nextNode, previousNode);
-                previousNode = nextNode;
-
-                // Store id
-                this.pathNodeIds.push(previousNode.id);
-
-                // Build document title
-                if (!parent.isRoot()) {
-                        this.title = this.getText(previousNode) + pathSeparator + this.title;
-                }
-                parent = parent.parent;
-        }
-};
-
-// Creates a folder heading link.
-//
-// node: BookmarkNode to render
-// className: class name of link (optional)
-BookmarkContainerNode.prototype.createLink = function(document,
-                                                      node,
-                                                      className)
-{
-        var link = document.createElement('a');
-        link.id = node.id;
-
-        // Mark link as folder heading link for popup handler
-        link.setAttribute(this.folderHeadingLinkAttribute, 'true');
-
-        if (className) {
-                link.className = className;
-        }
-
-        // Get full path of node and strip root bookmark node's name
-        link.href = node.href;
-
-        // Set tooltip
-        if (showDescriptionTooltips) {
-                this.setTooltip(node, link);
-        }
-
-        var linkText = document.createTextNode(node.name);
-        link.appendChild(linkText);
-        return link;
-};
-
-// Creates a collapse button.
-//
-// node: BookmarkNode to render
-BookmarkContainerNode.prototype.createCollapseButton = function(document,
-                                                                node)
-{
-        // Create button
-        var button = document.createElement('button');
-        button.className = this.collapseButtonClass;
-        button.setAttribute(this.nodeIdAttribute, node.id);
-
-        // Set click handler
-        button.setAttribute('onclick', 'try {myportal.collapser.toggle(this);} catch (e) {}');
-
-        // Create image
-        var image = document.createElementNS(XULNS, 'image');
-        image.id = 'myportal-' + node.id;
-
-        button.appendChild(image);
-        return button;
-};
-
-// Creates a note to indicate an empty folder.
-BookmarkContainerNode.prototype.createEmptyFolderNote = function(document)
-{
-        var note = document.createElement('span');
-        note.className = this.emptyFolderNoteClass;
-        note.appendChild(document.createTextNode(stringBundle.GetStringFromName('emptyFolder')));
-        return note;
-};
+        visitor.visitBookmarkContainerNode(this);
+}
 
 // Finds nodes in subtree with specified URL.
 //
@@ -1746,11 +1883,11 @@ BookmarkContainerNode.prototype.findFolderByPath = function(path)
 // Sets the document title.
 //
 // title: the document title
-BookmarkContainerNode.prototype.setTitle = function(document,
-                                                    title)
-{
-        document.title = new String(this.titlePrefix + title);
-};
+//BookmarkContainerNode.prototype.setTitle = function(document,
+//                                                    title)
+//{
+//        document.title = new String(this.titlePrefix + title);
+//};
 
 
 //// Bookmark Folder Node
@@ -1768,6 +1905,11 @@ function BookmarkFolderNode(resource,
 
 BookmarkFolderNode.prototype = new BookmarkContainerNode;
 
+BookmarkFolderNode.prototype.accept = function(visitor)
+{
+        visitor.visitBookmarkFolderNode(this);
+}
+
 
 //// Livemark Node
 
@@ -1783,48 +1925,11 @@ function LivemarkNode(resource,
 }
 
 LivemarkNode.prototype = new BookmarkContainerNode;
-LivemarkNode.prototype.livemarkMarkAsReadButtonClass = 'livemarkMarkAsReadButton';
-LivemarkNode.prototype.livemarkRefreshButtonClass = 'livemarkRefreshButton';
 
-// Sets livemark-specific attributes.
-LivemarkNode.prototype.setLivemark = function(document,
-                                              folderHeading)
+LivemarkNode.prototype.accept = function(visitor)
 {
-        // Mark link as livemark for popup handler
-        folderHeading.lastChild.setAttribute(this.livemarkAttribute, 'true');
-
-        // Create buttons
-        var markAsReadButton = document.createElement('button');
-        markAsReadButton.className = this.livemarkMarkAsReadButtonClass;
-        var refreshButton = document.createElement('button');
-        refreshButton.className = this.livemarkRefreshButtonClass;
-
-        // Set button tooltips
-        markAsReadButton.title = stringBundle.GetStringFromName('livemark.markAsRead');
-        refreshButton.title = stringBundle.GetStringFromName('livemark.refresh');
-
-        // Mark each button as livemark for popup handler
-//      markAsReadButton.setAttribute(this.livemarkAttribute, 'true');
-        markAsReadButton.setAttribute(this.nodeIdAttribute, this.id);
-//      refreshButton.setAttribute(this.livemarkAttribute, 'true');
-        refreshButton.setAttribute(this.nodeIdAttribute, this.id);
-
-        // Set click handlers
-        markAsReadButton.setAttribute('onclick', 'try {myportal.livemarkUpdater.markLivemarkAsRead(this);} catch (e) {}');
-        refreshButton.setAttribute('onclick', 'try {myportal.livemarkUpdater.refreshLivemark(this);} catch (e) {}');
-
-        // Add images to buttons
-        var markAsReadImage = document.createElementNS(XULNS, 'image');
-        var refreshImage = document.createElementNS(XULNS, 'image');
-        markAsReadButton.appendChild(markAsReadImage);
-        refreshButton.appendChild(refreshImage);
-
-        // Add buttons
-        folderHeading.appendChild(markAsReadButton);
-        folderHeading.appendChild(refreshButton);
-
-        folderHeading.className += ' ' + this.livemarkFolderHeadingClass;
-};
+        visitor.visitLivemarkNode(this);
+}
 
 
 //// XPCOM Module
