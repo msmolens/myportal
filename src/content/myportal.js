@@ -32,7 +32,7 @@ var myportal =
 
         //// Path ids
         rootNodeId: '',
-        pathNodeIds: '',
+        pathNodeIds: null,
 
 
         //// Services
@@ -188,7 +188,7 @@ var myportal =
                 // Update node in place if exists in this portal
                 var node = document.getElementById(nodeId);
                 var isPortalRoot = (this.rootNodeId == nodeId);
-                if (node && ((isPortalRoot) || !this.isInPath(nodeId))) {
+                if (node && (isPortalRoot || !this.isInPath(nodeId))) {
 
                         // Get folder node
                         node = this.getTopLevelNodeFromIdNode(node);
@@ -214,7 +214,19 @@ var myportal =
         // nodeId: bookmark node id
         isInPath: function(nodeId)
         {
-                return (this.pathNodeIds.indexOf(nodeId) != -1);
+                var found = false;
+
+                if (this.pathNodeIds) {
+                        var it = this.pathNodeIds.enumerate();
+                        while (it.hasMoreElements()) {
+                                if (it.getNext() == nodeId) {
+                                        found = true;
+                                        break;
+                                }
+                        }
+                }
+
+                return found;
         },
 
         // Given the DOM node that contains a bookmark's id, returns
@@ -224,6 +236,8 @@ var myportal =
         // node: a DOM node
         getTopLevelNodeFromIdNode: function(node)
         {
+                // TODO move logic to renderer?
+
                 if ((node.hasAttribute(this.folderHeadingLinkAttribute)) &&
                     (node.getAttribute(this.folderHeadingLinkAttribute) == 'true')) {
                         // Folder

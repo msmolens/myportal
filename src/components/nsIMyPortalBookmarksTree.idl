@@ -1,0 +1,93 @@
+/* nsIMyPortalBookmarksTree.idl
+ * Copyright (C) 2005-2007 Max Smolens
+ *
+ * This file is part of My Portal.
+ *
+ * My Portal is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * My Portal is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with My Portal; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ */
+
+#include "nsISupports.idl"
+
+interface nsIArray;
+interface nsIMyPortalBookmarkNode;
+interface nsIMyPortalBookmarkContainerNodeVisitor;
+
+[scriptable, uuid(309be62c-2bef-4dea-add7-2f8da1b4e932)]
+interface nsIMyPortalBookmarksTree : nsISupports
+{
+        /**
+         * Name of root bookmark node.
+         */
+        readonly attribute AUTF8String rootName;
+
+        /**
+         * Flag set true if tree should be rebuilt.
+         */
+        attribute boolean dirty;
+
+        /**
+         * Rebuild tree.
+         */
+        void rebuild();
+
+        /**
+         * Find node with specified id.
+         *
+         * @param id the id of the node to find
+         *
+         * @return the found node, or null
+         */
+        nsIMyPortalBookmarkNode findById(in ACString id);
+
+        /**
+         * TODO
+         * Find nodes with specified ids.
+         *
+         * @param nodes
+         *
+         * @return the found node, or null
+         */
+        // Finds bookmark nodes with specified ids.
+        //
+        // nodes: object with ids as its properties, where each id
+        // refers to an object with a link and node properties
+//        void findByIds(nodes);
+
+        /**
+         * Find bookmark nodes in subtree with specified URL.
+         *
+         * @param url the bookmark URL
+         *
+         * @return an array of bookmark nodes with the specified URL
+         */
+        nsIArray findByURL(in AUTF8String url);
+
+        /**
+         * Find folder node with specified id.
+         *
+         * @return the found node, or null
+         */
+        nsIMyPortalBookmarkNode findFolderById(in ACString id);
+
+        /**
+         * Find folder node in subtree with specified path.
+         *
+         * @param path URI-encoded path of folder node to find
+         *
+         * @return the found node, or null
+         */
+        nsIMyPortalBookmarkNode findFolderByPath(in AUTF8String path);
+};

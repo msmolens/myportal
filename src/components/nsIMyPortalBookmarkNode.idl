@@ -1,0 +1,85 @@
+/* nsIMyPortalBookmarkNode.idl
+ * Copyright (C) 2005-2007 Max Smolens
+ *
+ * This file is part of My Portal.
+ *
+ * My Portal is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2 of the License,
+ * or (at your option) any later version.
+ *
+ * My Portal is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with My Portal; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA
+ */
+
+#include "nsISupports.idl"
+
+interface nsIRDFResource;
+
+[scriptable, uuid(10303cb9-798e-41c7-97cd-d7d123ba0e0c)]
+interface nsIMyPortalBookmarkNode : nsISupports
+{
+        /**
+         * RDF resource.
+         */
+        attribute nsIRDFResource resource;
+
+        /**
+         * Parent node.
+         */
+        attribute nsIMyPortalBookmarkNode parent;
+
+        /**
+         * Node resource's id.
+         */
+        readonly attribute ACString id;
+
+        /**
+         * Node resource's name.
+         */
+        readonly attribute wstring name;
+
+        /**
+         * Node resource's url.
+         */
+        readonly attribute wstring url;
+
+        /**
+         * Node resource's description.
+         */
+        readonly attribute wstring description;
+
+        /**
+         * Node resource's icon.
+         */
+        readonly attribute wstring icon;
+
+        /**
+         * Node resource's last visit date.
+         */
+        readonly attribute long long lastVisitDate;
+
+        /**
+         * Most recent visit date for node resource's URL.
+         */
+        readonly attribute long long historyDate;
+
+        /**
+         * Full path.
+         */
+        readonly attribute wstring path;
+
+        /**
+         * Query whether the node is the root node.
+         *
+         * @return true if the node is the root node
+         */
+        boolean isRoot();
+};

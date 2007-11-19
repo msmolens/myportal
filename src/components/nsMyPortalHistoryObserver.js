@@ -61,7 +61,6 @@ function nsMyPortalHistoryObserver()
         this.rdfHistoryRoot = rdfService.rdfResource('historyRoot');
         this.rdfDate = rdfService.rdfResource('date');
         this.rdfChild = rdfService.rdfResource('child');
-
 }
 
 nsMyPortalHistoryObserver.prototype =

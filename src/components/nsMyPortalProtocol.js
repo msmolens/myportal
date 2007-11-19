@@ -99,11 +99,17 @@ nsMyPortalProtocol.prototype =
 // nsIModule
 var nsMyPortalProtocolModule =
 {
+        firstTime: true,
+
         registerSelf: function(compMgr,
                                fileSpec,
                                location,
                                type)
         {
+                if (this.firstTime) {
+                        this.firstTime = false;
+                        throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
+                }
                 compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
                 compMgr.registerFactoryLocation(MYPORTALPROTOCOL_CID,
                                                 MYPORTALPROTOCOL_NAME,

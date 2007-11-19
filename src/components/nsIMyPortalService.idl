@@ -21,16 +21,18 @@
 
 #include "nsISupports.idl"
 
+interface nsIArray;
 interface nsIDOMNode;
 
 [scriptable, uuid(19d258c7-dd37-4cea-8452-ce0507f4c4d4)]
 interface nsIMyPortalService : nsISupports
 {
-        string createDOMBookmarksTree(in nsIDOMNode parentNode,
+        nsIArray createDOMBookmarksTree(in nsIDOMNode parentNode,
                                       in string nodeId);
         nsIDOMNode updateDOMNode(in nsIDOMNode node,
                                  in string nodeId,
                                  in boolean isPortalRoot);
+        // TODO use nsIArray
         void updateVisitedLinks(in PRUint32 count,
                                 [array, size_is(count)] in nsIDOMNode links);
         void markLivemarkAsRead(in string nodeId);
@@ -43,4 +45,7 @@ interface nsIMyPortalService : nsISupports
         void toggleCollapsed(in nsIDOMNode node,
                              in nsIDOMNode folderNode,
                              in string nodeId);
+        void setCollapsed(in nsIDOMNode node,
+                          in nsIDOMNode folderNode,
+                          in boolean collapsed);
 };

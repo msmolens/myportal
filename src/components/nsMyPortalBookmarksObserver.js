@@ -301,7 +301,6 @@ nsMyPortalBookmarksObserver.prototype =
         },
 
 
-
         //// nsIRDFObserver methods
 
         onAssert: function(ds,

@@ -108,7 +108,6 @@ function nsMyPortalRDFService()
         this.namespaces['html'] = HTMLNS;
         this.namespaces['xul'] = XULNS;
         this.namespaces['myportal'] = MYPORTALNS;
-
 }
 
 nsMyPortalRDFService.prototype =
