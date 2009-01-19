@@ -178,14 +178,14 @@ nsMyPortalBookmarkContainerNode.prototype =
 
         //// nsIMyPortalBookmarkNode methods
 
-        set resource(resource)
+        set node(node)
         {
-                this._base.resource = resource;
+                this._base.node = node;
         },
 
-        get resource()
+        get node()
         {
-                return this._base.resource;
+                return this._base.node;
         },
 
         set parent(parent)
@@ -211,10 +211,11 @@ nsMyPortalBookmarkContainerNode.prototype =
         // Returns myportal:// href.
         get url()
         {
-                var href = this.path;
-                href = href.split('/');
-                href = href.slice(2).join('/');
-                return ('myportal://' + href);
+                // var href = this.path;
+                // href = href.split('/');
+                // href = href.slice(2).join('/');
+                // return ('myportal://' + href);
+				return null;
         },
 
         get description()

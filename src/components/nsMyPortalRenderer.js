@@ -19,7 +19,9 @@
  * 02110-1301 USA
  */
 
-//// Component constants
+Components.utils.import("resource://gre/modules/utils.js");
+
+ //// Component constants
 
 const MYPORTALRENDERER_NAME = 'My Portal Renderer';
 const MYPORTALRENDERER_CONTRACTID = '@unroutable.org/myportal-renderer;1';
@@ -223,7 +225,7 @@ nsMyPortalRenderer.prototype.visitGeneralBookmarkNode = function(node)
 
         // Create link
         var link = this.document.createElement('a');
-        link.href = node.url;
+        link.href = node.node.uri;
 
         // Set tooltip
         if (this.showDescriptionTooltips) {
@@ -235,7 +237,7 @@ nsMyPortalRenderer.prototype.visitGeneralBookmarkNode = function(node)
                 link.setAttribute('target', '_blank');
         }
 
-        var name = node.name;
+        var name = node.node.title;
         if (this.truncateBookmarkNames) {
                 name = truncate(name, this.truncateBookmarkNamesLength);
         }
@@ -243,12 +245,12 @@ nsMyPortalRenderer.prototype.visitGeneralBookmarkNode = function(node)
         link.appendChild(text);
 
         // Set favicon
-        var icon = node.icon;
-        if (this.showFavicons && icon)
+        var faviconURI = node.node.icon;
+        if (this.showFavicons && faviconURI)
         {
                 // Insert icon and link into a container
                 var image = this.document.createElement('img');
-                image.src = icon;
+                image.src = faviconURI.spec;
                 image.className = 'favicon';
 
                 var container = this.document.createElement('span');
@@ -257,12 +259,12 @@ nsMyPortalRenderer.prototype.visitGeneralBookmarkNode = function(node)
                 container.appendChild(link);
 
                 // Assign container id
-                container.id = node.id;
+                container.id = node.node.itemId;
                 parent.appendChild(container);
         }
         else
         {
-                link.id = node.id;
+                link.id = node.node.itemId;
                 parent.appendChild(link);
         }
 
@@ -336,14 +338,14 @@ nsMyPortalRenderer.prototype.visitSmartBookmarkNode = function(node)
 
         var textbox = this.document.createElement('input');
         textbox.type = 'text';
-        textbox.id = node.id;
+        textbox.id = node.node.itemId;
         textbox.className = this.textboxClass;
         textbox.setAttribute('size', 30);
         textbox.setAttribute('url', node.url);
 
         var button = this.document.createElementNS(XULNS, 'button');
         button.setAttribute(this.textboxIdAttribute, textbox.id);
-        button.id = 'button:' + node.id;
+        button.id = 'button:' + node.node.itemId;
 
         var command = 'try {return myportal.smartBookmarkHandler.load(event);} catch (e) {return false;}';
 
@@ -538,7 +540,7 @@ BookmarkContainerRenderer.prototype.render = function(node,
 
                 // Set collapsed attributes
                 var myportalDataSource = Components.classes['@unroutable.org/myportal-datasource;1'].getService(nsIMyPortalDataSource);
-                if (myportalDataSource.isCollapsed(node.id)) {
+                if (myportalDataSource.isCollapsed(node.node.itemId)) {
                         var myportalService = Components.classes['@unroutable.org/myportal-service;1'].getService(nsIMyPortalService);
                         myportalService.setCollapsed(collapseButton, folderContents, true);
                 }
@@ -589,13 +591,14 @@ BookmarkContainerRenderer.prototype.createRootFolderHeading = function(node,
         if (!node.isRoot()) {
                 this.title = previousNode.firstChild.nodeValue;
         }
+        
+        // FIXME execute new query to get parent folders?
 
         // Add link for each folder in path
         const pathSeparator = '/';
         var nextNode = null;
         var parent = node.parent;
         while (parent != null) {
-
                 // Insert separator
                 nextNode = this.document.createTextNode(pathSeparator);
                 folderHeading.insertBefore(nextNode, previousNode);
@@ -627,7 +630,7 @@ BookmarkContainerRenderer.prototype.createLink = function(node,
                                                           className)
 {
         var link = this.document.createElement('a');
-        link.id = node.id;
+        link.id = node.node.itemId;
 
         // Mark link as folder heading link for popup handler
         link.setAttribute(this.folderHeadingLinkAttribute, 'true');
@@ -646,7 +649,7 @@ BookmarkContainerRenderer.prototype.createLink = function(node,
                 setTooltip(node, link);
         }
 
-        var linkText = this.document.createTextNode(node.name);
+        var linkText = this.document.createTextNode(node.node.title); // was: node.name
         link.appendChild(linkText);
         return link;
 }
@@ -656,14 +659,14 @@ BookmarkContainerRenderer.prototype.newCollapseButton = function(node)
         // Create button
         var button = this.document.createElement('button');
         button.className = this.collapseButtonClass;
-        button.setAttribute(this.nodeIdAttribute, node.id);
+        button.setAttribute(this.nodeIdAttribute, node.node.itemId);
 
         // Set click handler
         button.setAttribute('onclick', 'try {myportal.collapser.toggle(this);} catch (e) {}');
 
         // Create image
         var image = this.document.createElementNS(XULNS, 'image');
-        image.id = 'myportal-' + node.id;
+        image.id = 'myportal-' + node.node.itemId;
 
         button.appendChild(image);
         return button;
@@ -709,9 +712,9 @@ LivemarkHeaderRenderer.prototype.render = function(node,
 
         // Mark each button as livemark for popup handler
 //      markAsReadButton.setAttribute(this.livemarkAttribute, 'true');
-        markAsReadButton.setAttribute(this.nodeIdAttribute, node.id);
+        markAsReadButton.setAttribute(this.nodeIdAttribute, node.node.itemId);
 //      refreshButton.setAttribute(this.livemarkAttribute, 'true');
-        refreshButton.setAttribute(this.nodeIdAttribute, node.id);
+        refreshButton.setAttribute(this.nodeIdAttribute, node.node.itemId);
 
         // Set click handlers
         markAsReadButton.setAttribute('onclick', 'try {myportal.livemarkUpdater.markLivemarkAsRead(this);} catch (e) {}');

@@ -19,6 +19,8 @@
  * 02110-1301 USA
  */
 
+ Components.utils.import("resource://gre/modules/utils.js");
+
 //// My Portal Window Events
 //
 // Handles window events such as the popup context menu.
@@ -65,6 +67,7 @@ var myportalWindowEvents =
 
                 // Clicked DOM node
                 var node = document.popupNode;
+                
 
                 // Create list of open folder menuitems
                 var openFolderMenuItems = new MenuItems();
@@ -87,6 +90,8 @@ var myportalWindowEvents =
                 var livemarkLocationMenuItems = new MenuItems();
                 livemarkLocationMenuItems.push(document.getElementById('myportalOpenLivemarkLocationInWindow'));
                 livemarkLocationMenuItems.push(document.getElementById('myportalOpenLivemarkLocationInTab'));
+                
+                // TODO maybe look up node type by id directly
 
                 // Determine clicked node's type
                 const myportalURL = 'myportal://';
@@ -125,6 +130,7 @@ var myportalWindowEvents =
                 // Don't show bookmark properties when clicked on livemark link or NC:BookmarksRoot
                 var propertiesMenuItem = document.getElementById('context-metadata');
                 var bookmarkPropertiesMenuItem = document.getElementById('myportalBookmarkProperties');
+                
                 var showBookmarkProperties = isBookmark && !isLivemarkLink && !isBookmarksRoot;
                 propertiesMenuItem.hidden = showBookmarkProperties;
                 bookmarkPropertiesMenuItem.hidden = !showBookmarkProperties;
@@ -149,6 +155,8 @@ var myportalWindowEvents =
         // Returns true if node has a URL.
         isLivemarkWithLocation: function(node)
         {
+                return false;
+                // FIXME
                 var id = this.getNodeId(node);
                 var url = this.myportalService.getURLForId(id);
                 return (url != '');
@@ -297,9 +305,25 @@ var myportalWindowEvents =
         // node: clicked DOM node of bookmark
         openBookmarkProperties: function(node)
         {
+                var bookmarksService = PlacesUtils.bookmarks;
                 var id = this.getNodeId(node);
-                var value = {};
-                window.openDialog('chrome://browser/content/bookmarks/bookmarksProperties.xul', '', 'centerscreen,chrome,modal,resizable=no', id, value);
+                var type = "";
+                var itemType = bookmarksService.getItemType(id);
+                dump(itemType + '\n');
+                switch (itemType) {
+                        case Components.interfaces.nsINavBookmarksService.TYPE_BOOKMARK:
+                                type = "bookmark";
+                                break;
+                        case Components.interfaces.nsINavBookmarksService.TYPE_FOLDER:
+                                type = "folder";
+                                break;
+                        default:
+                                break;
+                }
+
+                if (type.length) {
+                        PlacesUIUtils.showItemProperties(id, type);
+                }
         }
 };
 

@@ -19,7 +19,9 @@
  * 02110-1301 USA
  */
 
-//// Component constants
+Components.utils.import("resource://gre/modules/utils.js");
+
+ //// Component constants
 
 const MYPORTALSERVICE_NAME = 'My Portal Service';
 const MYPORTALSERVICE_CONTRACTID = '@unroutable.org/myportal-service;1';
@@ -39,11 +41,9 @@ const nsIMyPortalVisitable = Components.interfaces.nsIMyPortalVisitable;
 const nsIMyPortalBookmarkNode = Components.interfaces.nsIMyPortalBookmarkNode;
 const nsIMyPortalBookmarkNodeVisitor = Components.interfaces.nsIMyPortalBookmarkNodeVisitor;
 const nsIMyPortalBookmarkContainerNode = Components.interfaces.nsIMyPortalBookmarkContainerNode;
-const nsIMyPortalRDFService = Components.interfaces.nsIMyPortalRDFService;
 const nsISupports = Components.interfaces.nsISupports;
 const nsIFactory = Components.interfaces.nsIFactory;
 const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
-const nsIRDFService = Components.interfaces.nsIRDFService;
 const nsIStringBundleService = Components.interfaces.nsIStringBundleService;
 const nsIObserverService = Components.interfaces.nsIObserverService;
 const nsIBookmarksService = Components.interfaces.nsIBookmarksService;
@@ -55,7 +55,8 @@ const nsIIOService = Components.interfaces.nsIIOService;
 const nsIDOMDocument = Components.interfaces.nsIDOMDocument
 const nsIDOMNode = Components.interfaces.nsIDOMNode;
 const nsIArray = Components.interfaces.nsIArray;
-
+const nsINavHistoryContainerResultNode = Components.interfaces.nsINavHistoryContainerResultNode;
+const nsINavHistoryResultNode = Components.interfaces.nsINavHistoryResultNode;
 
 //// Namespace constants
 
@@ -65,7 +66,6 @@ const XULNS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
 //// Services
 // TODO make members of service
 
-var rdfService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(nsIRDFService);
 var stringBundleService = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(nsIStringBundleService);
 var observerService = Components.classes['@mozilla.org/observer-service;1'].getService(nsIObserverService);
 var preferencesService = Components.classes['@mozilla.org/preferences-service;1'].getService(nsIPrefService);
@@ -142,10 +142,10 @@ RDFObserver.prototype =
 function nsMyPortalService()
 {
         // Init bookmarks data source
-        this.bookmarksDataSource = rdfService.GetDataSource('rdf:bookmarks');
+//        this.bookmarksDataSource = rdfService.GetDataSource('rdf:bookmarks');
 
         // Init history data source
-        this.historyDataSource = rdfService.GetDataSource('rdf:history');
+ //       this.historyDataSource = rdfService.GetDataSource('rdf:history');
 
         // Init My Portal data source
         this.myportalDataSource = Components.classes['@unroutable.org/myportal-datasource;1'].getService(nsIMyPortalDataSource);
@@ -155,8 +155,8 @@ function nsMyPortalService()
         this.browserHistoryService = this.globalHistoryService.QueryInterface(nsIBrowserHistory);
 
         // Load bookmarks
-        var bookmarksService = this.bookmarksDataSource.QueryInterface(nsIBookmarksService);
-        bookmarksService.readBookmarks();
+//        var bookmarksService = this.bookmarksDataSource.QueryInterface(nsIBookmarksService);
+//        bookmarksService.readBookmarks();
 
         // Init preferences service
         this.prefs = preferencesService.getBranch('myportal.');
@@ -171,13 +171,15 @@ function nsMyPortalService()
         this.titleFolderNotFound = this.stringBundle.GetStringFromName('title.folderNotFound') ;
 
         // Init bookmarks tree
-        this.bookmarksTree = Components.classes['@unroutable.org/myportal-bookmarks-tree;1'].createInstance(nsIMyPortalBookmarksTree);
+//        this.bookmarksTree = Components.classes['@unroutable.org/myportal-bookmarks-tree;1'].createInstance(nsIMyPortalBookmarksTree);
 
         // Init bookmarks observer
-        this.initBookmarksObserver();
+        this.bookmarksObserver = Components.classes['@unroutable.org/myportal-bookmarks-observer;1'].createInstance(nsIMyPortalBookmarksObserver);
+        this.bookmarksObserver.setDelay(1000);
+        PlacesUtils.bookmarks.addObserver(this.bookmarksObserver, false);
 
         // Init history observer
-        this.initHistoryObserver();
+//        this.initHistoryObserver();
 
         // Init notification topics
         var topicService = Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(nsIMyPortalNotificationTopicService);
@@ -192,8 +194,8 @@ function nsMyPortalService()
         this.shutdownTopic = topicService.topic('shutdown');
 
         // Observe bookmark changes
-        this.bookmarksObserver.enable();
-        this.historyObserver.enable();
+//        this.bookmarksObserver.enable();
+//        this.historyObserver.enable();
         observerService.addObserver(this, this.bookmarksObserverNotifyTopic, false);
         observerService.addObserver(this, this.bookmarksObserverUpdatedTopic, false);
         observerService.addObserver(this, this.bookmarksObserverStructureUpdatedTopic, false);
@@ -211,8 +213,8 @@ nsMyPortalService.prototype =
         // Unloads My Portal Service.
         unload: function()
         {
-                this.bookmarksObserver.disable();
-                this.historyObserver.disable();
+//                this.bookmarksObserver.disable();
+//                this.historyObserver.disable();
                 this.myportalDataSource.flush();
                 observerService.removeObserver(this, this.bookmarksObserverNotifyTopic);
                 observerService.removeObserver(this, this.bookmarksObserverUpdatedTopic);
@@ -222,19 +224,9 @@ nsMyPortalService.prototype =
                 this.prefsInternal.removeObserver('', this);
         },
 
-
-        initBookmarksObserver: function()
-        {
-                var observer = Components.classes['@unroutable.org/myportal-bookmarks-observer;1'].createInstance(nsIMyPortalBookmarksObserver);
-                observer.setDelay(1000);
-
-                this.bookmarksObserver = new RDFObserver();
-                this.bookmarksObserver.setDataSource(this.bookmarksDataSource);
-                this.bookmarksObserver.setObserver(observer);
-        },
-
         initHistoryObserver: function()
         {
+                // FIXME
                 var observer = Components.classes['@unroutable.org/myportal-history-observer;1'].createInstance(nsIMyPortalHistoryObserver);
                 this.historyObserver = new RDFObserver();
                 this.historyObserver.setDataSource(this.historyDataSource);
@@ -243,6 +235,107 @@ nsMyPortalService.prototype =
 
 
         //// DOM creation methods
+        
+        dumpResult: function(rootNode)
+        {
+			if (!(rootNode instanceof nsINavHistoryContainerResultNode))
+			{
+				return;
+			}
+
+			rootNode.containerOpen = true;
+
+            for (var i = 0; i < rootNode.childCount; i++) {
+                var node = rootNode.getChild(i);
+                var title = node.title;
+                var id = node.itemId;
+                var type = node.type;
+
+                switch (type)
+                {
+				case nsINavHistoryResultNode.RESULT_TYPE_URI:
+					dump('bookmark: ' + title + '(' + id + ')\n');
+					break;
+				case nsINavHistoryResultNode.RESULT_TYPE_VISIT:
+					break;
+				case nsINavHistoryResultNode.RESULT_TYPE_FULL_VISIT:
+					break;
+				case nsINavHistoryResultNode.RESULT_TYPE_HOST:
+					break;
+				case nsINavHistoryResultNode.RESULT_TYPE_REMOTE_CONTAINER:
+					break;
+				case nsINavHistoryResultNode.RESULT_TYPE_QUERY:	
+					break;
+				case nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
+					dump('folder: ' + title + '(' + id + ')\n');
+					this.dumpResult(node);
+					break;
+				case nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR:
+					dump('separator\n');
+					break;
+				case nsINavHistoryResultNode.RESULT_TYPE_DAY:
+					break;
+				default:
+					dump('default\n');
+					break;
+                }
+            }
+			
+			rootNode.containerOpen = false;
+        },
+
+        buildTree: function(rootNode)
+        {
+                if (!rootNode) {
+                        return null;
+                }
+                
+                var parentNode = null;
+                switch (rootNode.type) {
+                        case nsINavHistoryResultNode.RESULT_TYPE_URI:
+                                if (PlacesUtils.nodeIsLivemarkItem(rootNode)) {
+                                        parentNode = Components.classes['@unroutable.org/myportal-livemark-bookmark-node;1'].createInstance(nsIMyPortalBookmarkNode);
+                                } else {
+                                        parentNode = Components.classes['@unroutable.org/myportal-normal-bookmark-node;1'].createInstance(nsIMyPortalBookmarkNode);
+                                }
+                                break;
+                        case nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
+                                parentNode = PlacesUtils.nodeIsLivemarkContainer(rootNode) ?
+                                        Components.classes['@unroutable.org/myportal-livemark-node;1'].createInstance(nsIMyPortalBookmarkNode) :
+                                        Components.classes['@unroutable.org/myportal-bookmark-folder-node;1'].createInstance(nsIMyPortalBookmarkNode);
+                                parentNode.QueryInterface(nsIMyPortalBookmarkContainerNode);
+                                if (rootNode instanceof nsINavHistoryContainerResultNode) {
+                                        rootNode.containerOpen = true;
+
+                                        for (var i = 0; i < rootNode.childCount; i++) {
+                                                var node = rootNode.getChild(i);
+                                                var childNode = this.buildTree(node);
+                                                if (childNode) {
+                                                        childNode.node = node;
+                                                        childNode.parent = parentNode;
+                                                        parentNode.addChild(childNode);
+                                                }
+                                        }
+                                        
+                                        rootNode.containerOpen = false;
+                                }
+
+                                break;
+                        case nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR:
+                                // Create bookmark separator node
+                                parentNode = Components.classes['@unroutable.org/myportal-bookmark-separator-node;1'].createInstance(nsIMyPortalBookmarkNode);
+                                break;
+                        default:
+                                break;
+                }
+                
+                if (parentNode) {
+                        parentNode.node = rootNode;
+                        parentNode.parent = null;
+                }
+                
+                return parentNode;
+        },
 
         // Creates bookmarks tree.
         //
@@ -251,37 +344,53 @@ nsMyPortalService.prototype =
         createDOMBookmarksTree: function(parentDOMNode,
                                          nodeId)
         {
+                var validNode = (nodeId > -1);
+
                 var document = parentDOMNode.ownerDocument;
                 var documentTitle = this.titlePrefix;
                 var pathNodeIds = null;
 
                 // Render tree
                 var documentFragment = document.createDocumentFragment();
-                var node = this.bookmarksTree.findFolderById(nodeId);
+
+                var historyService = PlacesUtils.history;
+                var options = historyService.getNewQueryOptions();
+                var query = historyService.getNewQuery();
+
+                var result = null;
+                var rootNode = null;
+                if (validNode) {
+                        query.setFolders([nodeId], 1);
+                        result = historyService.executeQuery(query, options);
+                        rootNode = result.root;
+                }
+//		this.dumpResult(rootNode);
+                
+                var node = this.buildTree(rootNode);
                 if (node instanceof nsIMyPortalVisitable &&
-                    document instanceof nsIDOMDocument &&
-                    documentFragment instanceof nsIDOMNode) {
+                        document instanceof nsIDOMDocument &&
+                        documentFragment instanceof nsIDOMNode) {
 
-                        // TODO refactor
-                        var renderer = Components.classes['@unroutable.org/myportal-renderer;1'].createInstance(nsIMyPortalRenderer);
-                        document = document.QueryInterface(nsIDOMDocument);
-                        documentFragment = documentFragment.QueryInterface(nsIDOMNode);
-                        renderer.init(document, documentFragment, true);
-                        renderer.setBoolProperty('showDescriptionTooltips', showDescriptionTooltips);
-                        renderer.setBoolProperty('showFavicons', showFavicons);
-                        renderer.setBoolProperty('openLinksNewTabOrWindow', openLinksNewTabOrWindow);
-                        renderer.setBoolProperty('truncateBookmarkNames', truncateBookmarkNames);
-                        renderer.setIntProperty('truncateBookmarkNamesLength', truncateBookmarkNamesLength);
-                        renderer.setBoolProperty('increaseRecentlyVisitedSize', increaseRecentlyVisitedSize);
-                        renderer.QueryInterface(nsIMyPortalBookmarkNodeVisitor);
-                        node.accept(renderer);
+                                // TODO refactor
+                                var renderer = Components.classes['@unroutable.org/myportal-renderer;1'].createInstance(nsIMyPortalRenderer);
+                                document = document.QueryInterface(nsIDOMDocument);
+                                documentFragment = documentFragment.QueryInterface(nsIDOMNode);
+                                renderer.init(document, documentFragment, true);
+                                renderer.setBoolProperty('showDescriptionTooltips', showDescriptionTooltips);
+                                renderer.setBoolProperty('showFavicons', showFavicons);
+                                renderer.setBoolProperty('openLinksNewTabOrWindow', openLinksNewTabOrWindow);
+                                renderer.setBoolProperty('truncateBookmarkNames', truncateBookmarkNames);
+                                renderer.setIntProperty('truncateBookmarkNamesLength', truncateBookmarkNamesLength);
+                                renderer.setBoolProperty('increaseRecentlyVisitedSize', increaseRecentlyVisitedSize);
+                                renderer.QueryInterface(nsIMyPortalBookmarkNodeVisitor);
+                                node.accept(renderer);
 
-                        documentTitle += renderer.title;
-                        pathNodeIds = renderer.pathNodeIds;
+                                documentTitle += renderer.title;
+                                pathNodeIds = renderer.pathNodeIds;
                 } else {
-                        // Render error message
-                        documentFragment.appendChild(this.createErrorMessage(document));
-                        documentTitle = this.titleFolderNotFound;
+                                // Render error message
+                                documentFragment.appendChild(this.createErrorMessage(document));
+                                documentTitle = this.titleFolderNotFound;
                 }
 
                 // Set document title
@@ -302,8 +411,33 @@ nsMyPortalService.prototype =
                                 nodeId,
                                 isPortalRoot)
         {
-                // Find bookmark node
-                var bookmarkNode = this.bookmarksTree.findById(nodeId);
+                var historyService = PlacesUtils.history;
+                var options = historyService.getNewQueryOptions();
+                var query = historyService.getNewQuery();
+                
+                var bookmarksService = PlacesUtils.bookmarks;
+                var folderId = bookmarksService.getFolderIdForItem(nodeId);
+
+                query.setFolders([folderId], 1);
+
+                var result = historyService.executeQuery(query, options);
+                var rootNode = result.root;
+                
+                rootNode.containerOpen = true;
+
+                var foundNode = null;
+                for (var i = 0; i < rootNode.childCount; i++) {
+                        var childNode = rootNode.getChild(i);
+                        if (childNode.itemId == nodeId) {
+                                foundNode = childNode;
+                                break;
+                        }
+                }
+
+                rootNode.containerOpen = false;
+                
+                var bookmarkNode = this.buildTree(foundNode);
+                
                 var document = node.ownerDocument;
                 var documentFragment = document.createDocumentFragment();
 
@@ -441,31 +575,47 @@ nsMyPortalService.prototype =
         markLivemark: function(nodeId,
                                markFunction)
         {
-                // Verify that livemark is not empty
-                var node = this.bookmarksTree.findFolderById(nodeId);
-                // FIXME TEMP
-                if (node && (node instanceof nsIMyPortalBookmarkContainerNode) && node.children.length) {
+                var historyService = PlacesUtils.history;
+                var options = historyService.getNewQueryOptions();
+                var query = historyService.getNewQuery();
 
-                        // Disable history observer to avoid updating each link separately
-                        this.historyObserver.disable();
+                query.setFolders([nodeId], 1);
 
-                        // Add livemarks to history
-                        var children = node.children.enumerate();
-                        while (children.hasMoreElements()) {
-                                let child = children.getNext();
-                                if ((child instanceof nsIMyPortalBookmarkNode) &&
-                                    !(child instanceof nsIMyPortalBookmarkContainerNode)) {
-                                        markFunction.call(this, child.url);
-                                }
-                        }
-
-                        // Re-enable history observer
-                        this.historyObserver.enable();
-
-                        // Redraw
-                        observerService.notifyObservers(this, this.livemarkUpdateEndedNoFadeTopic, nodeId);
+                var result = historyService.executeQuery(query, options);
+                var rootNode = result.root;
+                if (!(rootNode instanceof nsINavHistoryContainerResultNode)) {
+                        return;
                 }
-        },
+        
+                //
+                // Add livemarks to history
+                //
+
+                // FIXME
+                // Disable history observer to avoid updating each link separately
+//              this.historyObserver.disable();
+
+                rootNode.containerOpen = true;
+
+                for (var i = 0; i < rootNode.childCount; i++) {
+                        var node = rootNode.getChild(i);
+                        var title = node.title;
+                        var id = node.itemId;
+                        var type = node.type;
+                        if (nsINavHistoryResultNode.RESULT_TYPE_URI == type) {
+                                markFunction.call(this, node.uri);
+                        }
+                }
+			
+		rootNode.containerOpen = false;
+
+                 // FIXME
+                 // Re-enable history observer
+  //             this.historyObserver.enable();
+
+                // Redraw
+                observerService.notifyObservers(this, this.livemarkUpdateEndedNoFadeTopic, nodeId);
+},
 
         // Refreshes a livemark.
         // Adapted from browser/components/content/bookmarks.js
@@ -473,30 +623,85 @@ nsMyPortalService.prototype =
         // nodeId: livemark id
         refreshLivemark: function(nodeId)
         {
-                var myportalRDFService = Components.classes['@unroutable.org/myportal-rdf-service;1'].getService(nsIMyPortalRDFService);
-                var rdfExpiration = myportalRDFService.rdfResource('livemarkExpiration');
-                var resource = rdfService.GetResource(nodeId);
-                var oldTarget = this.bookmarksDataSource.GetTarget(resource, rdfExpiration, true);
-                if (oldTarget) {
-                        this.bookmarksDataSource.Unassert(resource, rdfExpiration, oldTarget);
-                }
+                var livemarkService = PlacesUtils.livemarks;
+                livemarkService.reloadLivemarkFolder(nodeId);
         },
 
 
         //// Bookmark information methods
+		
+		getIdForPath_: function(bookmarksPath, folderNode)
+		{
+			if (!(folderNode instanceof nsINavHistoryContainerResultNode)) {
+				return;
+			}
+
+			var name;
+			var idx = bookmarksPath.indexOf("/");
+			if (idx >= 0) {
+			
+				// Decode top folder name
+				name = decodeURIComponent(bookmarksPath.substr(0, idx));
+				
+				// Strip top folder name from path
+				if (idx < bookmarksPath.length) {
+					bookmarksPath = bookmarksPath.substr(idx+1);
+				}
+			} else {
+
+				// Leaf
+				name = bookmarksPath;
+				bookmarksPath = "";
+			}
+			
+			//dump('> ' + name + '--' + bookmarksPath + '\n');
+			
+			if (name.length == 0) {
+				return folderNode.itemId;
+			}
+			
+			var folderId = -1;
+
+			folderNode.containerOpen = true;
+
+            for (var i = 0; i < folderNode.childCount; i++) {
+                var node = folderNode.getChild(i);
+				if (nsINavHistoryResultNode.RESULT_TYPE_FOLDER == node.type)
+				{
+					if (node.title == name) {
+
+						// Recurse
+						var id = this.getIdForPath_(bookmarksPath, node);
+						if (id > -1) {
+							folderId = id;
+						}
+						
+						break;
+					}
+				}
+            }
+			
+			folderNode.containerOpen = false;
+
+			return folderId;
+		},
 
         // Returns id of deepest folder in path.
         //
         // bookmarksPath: path not including root bookmark node name
         getIdForPath: function(bookmarksPath)
         {
-                // Insert root bookmark name
-                var fullBookmarksPath = encodeURIComponent(this.bookmarksTree.rootName) + '/' + bookmarksPath;
-                var id = '';
-                var folder = this.bookmarksTree.findFolderByPath(fullBookmarksPath);
-                if (folder) {
-                        id = folder.id;
-                }
+                var historyService = PlacesUtils.history;
+                var options = historyService.getNewQueryOptions();
+                var query = historyService.getNewQuery();
+                var bookmarksMenuFolder = PlacesUtils.bookmarksMenuFolderId;
+
+                query.setFolders([bookmarksMenuFolder], 1);
+
+                var result = historyService.executeQuery(query, options);
+                var rootNode = result.root;
+                var id = this.getIdForPath_(bookmarksPath, rootNode);
+
                 return id;
         },
 
@@ -514,11 +719,11 @@ nsMyPortalService.prototype =
         // nodeId: bookmark id
         getURLForId: function(nodeId)
         {
-                var node = this.bookmarksTree.findById(nodeId);
-                if (node) {
-                        return node.url;
-                }
-                return '';
+                // TODO remove function?
+                var bookmarksService = PlacesUtils.bookmarks;
+                var id = parseInt(nodeId);
+                var uri = bookmarksService.getBookmarkURI(id);
+                return uri.spec;
         },
 
         // Returns list of bookmarks with a particular URL.
@@ -664,18 +869,18 @@ nsMyPortalService.prototype =
                           data)
         {
                 if (topic == this.bookmarksObserverNotifyTopic) {
-                        dump(topic + '\n');
-                        this.bookmarksTree.dirty = true;
+//                        dump(topic + '\n');
+//                        this.bookmarksTree.dirty = true;
                 } else if (topic == this.bookmarksObserverUpdatedTopic) {
                         dump(topic + ' ' + data + '\n');
-                        this.bookmarksTree.dirty = true;
+//                        this.bookmarksTree.dirty = true;
                         if (automaticallyUpdatePortal) {
                                 // data: id
                                 observerService.notifyObservers(this, this.bookmarkUpdatedTopic, data);
                         }
                 } else if (topic == this.bookmarksObserverStructureUpdatedTopic) {
                         dump(topic + '\n');
-                        this.bookmarksTree.dirty = true;
+ //                       this.bookmarksTree.dirty = true;
                         if (automaticallyUpdatePortal) {
                                 // data: id
                                 observerService.notifyObservers(this, this.bookmarkStructureUpdatedTopic, data);

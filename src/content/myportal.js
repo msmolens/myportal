@@ -27,6 +27,7 @@ var myportal =
 {
         //// Ids and attributes
         myportalBodyId: 'myportalBody', // matches value in myportal.html
+
         folderHeadingLinkAttribute: 'folderHeadingLink', // matches value in BookmarkContainerNode
 
 
@@ -62,73 +63,73 @@ var myportal =
                 this.customStyleSheet.setStyle(document.getElementById('customStyleSheet'));
                 this.customStyleSheet.update();
 
-                // Init logo
+ //               // Init logo
                 this.logo = Components.classes['@unroutable.org/myportal-logo;1'].createInstance(Components.interfaces.nsIMyPortalLogo);
                 this.logo.setDocument(document);
                 this.logo.update();
 
-                // Init image
+ //               // Init image
                 this.image = Components.classes['@unroutable.org/myportal-image;1'].createInstance(Components.interfaces.nsIMyPortalImage);
                 this.image.setImage(document.getElementById('myportalImage'));
                 this.image.update();
 
-                // Init smart bookmark handler
-                this.smartBookmarkHandler = new MyPortalSmartBookmarkHandler();
+ //               // Init smart bookmark handler
+ //               this.smartBookmarkHandler = new MyPortalSmartBookmarkHandler();
 
-                // Init age timer
-                this.ageTimer = new MyPortalAgeTimer();
+ //               // Init age timer
+ //               this.ageTimer = new MyPortalAgeTimer();
 
-                // Init collapser
+ //               // Init collapser
                 this.collapser = new MyPortalCollapser();
 
-                // Render bookmarks
+ //               // Render bookmarks
                 this.renderBookmarks();
 
-                // Init notification topics
-                var topicService =  Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(Components.interfaces.nsIMyPortalNotificationTopicService);
-                this.bookmarkUpdatedTopic = topicService.topic('bookmarkUpdated');
-                this.bookmarkStructureUpdatedTopic = topicService.topic('bookmarkStructureUpdated');
-                this.forceRefreshTopic = topicService.topic('forceRefresh');
+               // Init notification topics
+               var topicService =  Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(Components.interfaces.nsIMyPortalNotificationTopicService);
+               this.bookmarkUpdatedTopic = topicService.topic('bookmarkUpdated');
+               this.bookmarkStructureUpdatedTopic = topicService.topic('bookmarkStructureUpdated');
+               this.forceRefreshTopic = topicService.topic('forceRefresh');
 
-                // Init livemark updater and register livemark update observers
-                this.livemarkUpdater = new MyPortalLivemarkUpdater(this);
-                this.observerService.addObserver(this.livemarkUpdater, this.livemarkUpdater.livemarkUpdateEndedTopic, false);
-                this.observerService.addObserver(this.livemarkUpdater, this.livemarkUpdater.livemarkUpdateEndedNoFadeTopic, false);
+               // Init livemark updater and register livemark update observers
+               this.livemarkUpdater = new MyPortalLivemarkUpdater(this);
+               this.observerService.addObserver(this.livemarkUpdater, this.livemarkUpdater.livemarkUpdateEndedTopic, false);
+               this.observerService.addObserver(this.livemarkUpdater, this.livemarkUpdater.livemarkUpdateEndedNoFadeTopic, false);
 
-                // Register bookmark update observer
-                this.observerService.addObserver(this, this.bookmarkUpdatedTopic, false);
-                this.observerService.addObserver(this, this.bookmarkStructureUpdatedTopic, false);
+               // Register bookmark update observer
+               this.observerService.addObserver(this, this.bookmarkUpdatedTopic, false);
+               this.observerService.addObserver(this, this.bookmarkStructureUpdatedTopic, false);
 
-                // Register force refresh observer
-                this.observerService.addObserver(this, this.forceRefreshTopic, false);
-        },
+ //               // Register force refresh observer
+ //               this.observerService.addObserver(this, this.forceRefreshTopic, false);
+       },
 
         // Unloads My Portal.
         unload: function()
         {
-                // Cancel age timer
-                this.ageTimer.cancel();
+ //               // Cancel age timer
+ //               this.ageTimer.cancel();
 
-                // Unregister observers
+ //               // Unregister observers
                 this.observerService.removeObserver(this.livemarkUpdater, this.livemarkUpdater.livemarkUpdateEndedTopic);
                 this.observerService.removeObserver(this.livemarkUpdater, this.livemarkUpdater.livemarkUpdateEndedNoFadeTopic);
                 this.observerService.removeObserver(this, this.bookmarkUpdatedTopic);
                 this.observerService.removeObserver(this, this.bookmarkStructureUpdatedTopic);
-                this.observerService.removeObserver(this, this.forceRefreshTopic);
+ //               this.observerService.removeObserver(this, this.forceRefreshTopic);
 
-                // Unload elements
+ //               // Unload elements
                 this.logo.unload();
                 this.image.unload();
                 this.colorStyleSheet.unload();
                 this.customStyleSheet.unload();
 
-                // Aid garbage collection
-                this.colorStyleSheet = null;
-                this.customStyleSheet = null;
-                this.logo = null;
-                this.image = null;
-                this.smartbookmarkhandler = null;
-                this.ageTimer = null;
+ //               // Aid garbage collection
+ //               this.colorStyleSheet = null;
+ //               this.customStyleSheet = null;
+ //               this.logo = null;
+ //               this.image = null;
+ //               this.smartbookmarkhandler = null;
+ //               this.ageTimer = null;
                 this.livemarkUpdater = null;
         },
 
@@ -150,7 +151,7 @@ var myportal =
                 } else {
 
                         // Start age timer
-                        this.ageTimer.start();
+ //                       this.ageTimer.start();
                 }
         },
 
@@ -167,101 +168,100 @@ var myportal =
 
         //// Update methods
 
-        // Redraws element or reloads portal if element is in path.
-        //
-        // nodeId: id of element that changed
-        updatePortalOrReload: function(nodeId)
-        {
-                if (this.isInPath(nodeId)) {
-                        // Open a new portal if a folder in current path has been updated to ensure valid URL in the URL bar
-                        window.location.href = this.myportalService.getHrefForId(this.rootNodeId);
-                } else {
-                        this.updatePortal(nodeId);
-                }
-        },
+       // Redraws element or reloads portal if element is in path.
+       //
+       // nodeId: id of element that changed
+       updatePortalOrReload: function(nodeId)
+       {
+               if (this.isInPath(nodeId)) {
+                       // Open a new portal if a folder in current path has been updated to ensure valid URL in the URL bar
+                       window.location.href = this.myportalService.getHrefForId(this.rootNodeId);
+               } else {
+                       this.updatePortal(nodeId);
+               }
+       },
 
-        // Redraws element.
-        //
-        // nodeId: id of element that changed
-        updatePortal: function(nodeId)
-        {
-                // Update node in place if exists in this portal
-                var node = document.getElementById(nodeId);
-                var isPortalRoot = (this.rootNodeId == nodeId);
-                if (node && (isPortalRoot || !this.isInPath(nodeId))) {
+       // Redraws element.
+       //
+       // nodeId: id of element that changed
+       updatePortal: function(nodeId)
+       {
+               // Update node in place if exists in this portal
+               var node = document.getElementById(nodeId);
+               var isPortalRoot = (this.rootNodeId == nodeId);
+               if (node && (isPortalRoot || !this.isInPath(nodeId))) {
 
-                        // Get folder node
-                        node = this.getTopLevelNodeFromIdNode(node);
+                       node = this.getTopLevelNodeFromIdNode(node);
 
-                        // Save any textbox values
-                        var savedTextboxValues = new MyPortalSavedTextboxValues(node);
-                        savedTextboxValues.save();
+                       // Save any textbox values
+                       // var savedTextboxValues = new MyPortalSavedTextboxValues(node);
+                       // savedTextboxValues.save();
 
-                        // Re-render node
-                        var newNode = this.myportalService.updateDOMNode(node, nodeId, isPortalRoot).firstChild;
-                        node.parentNode.replaceChild(newNode, node);
+                       // Re-render node
+                       var newNode = this.myportalService.updateDOMNode(node, nodeId, isPortalRoot).firstChild;
+                       node.parentNode.replaceChild(newNode, node);
 
-                        // Restore textbox values
-                        savedTextboxValues.restore();
-                }
-        },
-
-
-        //// Miscellaneous methods
-
-        // Returns true if node id is in portal's path.
-        //
-        // nodeId: bookmark node id
-        isInPath: function(nodeId)
-        {
-                var found = false;
-
-                if (this.pathNodeIds) {
-                        var it = this.pathNodeIds.enumerate();
-                        while (it.hasMoreElements()) {
-                                if (it.getNext() == nodeId) {
-                                        found = true;
-                                        break;
-                                }
-                        }
-                }
-
-                return found;
-        },
-
-        // Given the DOM node that contains a bookmark's id, returns
-        // the top-level DOM node of all the nodes rendered for that
-        // bookmark.
-        //
-        // node: a DOM node
-        getTopLevelNodeFromIdNode: function(node)
-        {
-                // TODO move logic to renderer?
-
-                if ((node.hasAttribute(this.folderHeadingLinkAttribute)) &&
-                    (node.getAttribute(this.folderHeadingLinkAttribute) == 'true')) {
-                        // Folder
-                        node = node.parentNode.parentNode;
-                } else if (node.nodeName == 'INPUT') {
-                        // Smart Bookmark
-                        node = node.parentNode.parentNode.parentNode;
-                }
-                return node;
-        },
+                       // Restore textbox values
+                       // savedTextboxValues.restore();
+               }
+       },
 
 
-        //// nsIObserver methods
+       //// Miscellaneous methods
 
-        observe: function(subject,
-                          topic,
-                          data)
-        {
-                if (topic == this.bookmarkUpdatedTopic) {
-                        this.updatePortalOrReload(data);
-                } else if (topic == this.bookmarkStructureUpdatedTopic) {
-                        this.updatePortal(data);
-                } else if (topic == this.forceRefreshTopic) {
-                        this.renderBookmarks();
-                }
-        }
+       // Returns true if node id is in portal's path.
+       //
+       // nodeId: bookmark node id
+       isInPath: function(nodeId)
+       {
+               var found = false;
+
+               if (this.pathNodeIds) {
+                       var it = this.pathNodeIds.enumerate();
+                       while (it.hasMoreElements()) {
+                               if (it.getNext() == nodeId) {
+                                       found = true;
+                                       break;
+                               }
+                       }
+               }
+
+               return found;
+       },
+
+       // Given the DOM node that contains a bookmark's id, returns
+       // the top-level DOM node of all the nodes rendered for that
+       // bookmark.
+       //
+       // node: a DOM node
+       getTopLevelNodeFromIdNode: function(node)
+       {
+               // TODO move logic to renderer?
+
+               if ((node.hasAttribute(this.folderHeadingLinkAttribute)) &&
+                   (node.getAttribute(this.folderHeadingLinkAttribute) == 'true')) {
+                       // Folder
+                       node = node.parentNode.parentNode;
+               } else if (node.nodeName == 'INPUT') {
+                       // Smart Bookmark
+                       node = node.parentNode.parentNode.parentNode;
+               }
+               return node;
+       },
+
+
+       //// nsIObserver methods
+
+       observe: function(subject,
+                         topic,
+                         data)
+       {
+               if (topic == this.bookmarkUpdatedTopic) {
+                       this.updatePortalOrReload(data);
+               } else if (topic == this.bookmarkStructureUpdatedTopic) {
+                       this.updatePortal(data);
+               } else if (topic == this.forceRefreshTopic) {
+                       this.renderBookmarks();
+               }
+       }
 };

@@ -33,16 +33,16 @@ const nsISupports = Components.interfaces.nsISupports;
 const nsIFactory = Components.interfaces.nsIFactory;
 const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
 const nsIStringBundleService = Components.interfaces.nsIStringBundleService;
-const nsIRDFService = Components.interfaces.nsIRDFService;
-const nsIRDFResource = Components.interfaces.nsIRDFResource;
-const nsIRDFLiteral = Components.interfaces.nsIRDFLiteral;
-const nsIRDFDate = Components.interfaces.nsIRDFDate;
-const nsIMyPortalRDFService = Components.interfaces.nsIMyPortalRDFService;
+//const nsIRDFService = Components.interfaces.nsIRDFService;
+//const nsIRDFResource = Components.interfaces.nsIRDFResource;
+//const nsIRDFLiteral = Components.interfaces.nsIRDFLiteral;
+//const nsIRDFDate = Components.interfaces.nsIRDFDate;
+//const nsIMyPortalRDFService = Components.interfaces.nsIMyPortalRDFService;
 
 
 //// Services
 
-var rdfService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(nsIRDFService);
+//var rdfService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(nsIRDFService);
 
 
 //// My Portal Bookmark Node
@@ -52,28 +52,29 @@ var rdfService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService
 
 function nsMyPortalBookmarkNode()
 {
-        this._resource = null;
+	this._node = null;
+//        this._resource = null;
         this._parent = null;
 
-        this._rdfService = Components.classes['@unroutable.org/myportal-rdf-service;1'].getService(nsIMyPortalRDFService);
+//        this._rdfService = Components.classes['@unroutable.org/myportal-rdf-service;1'].getService(nsIMyPortalRDFService);
 }
 
 nsMyPortalBookmarkNode.prototype =
 {
-        _bookmarksDataSource: rdfService.GetDataSource('rdf:bookmarks'),
-        _historyDataSource: rdfService.GetDataSource('rdf:history'),
+//        _bookmarksDataSource: rdfService.GetDataSource('rdf:bookmarks'),
+//        _historyDataSource: rdfService.GetDataSource('rdf:history'),
 
 
         //// nsIMyPortalBookmarkNode methods
 
-        set resource(resource)
+        set node(node)
         {
-                this._resource = resource;
+               this._node = node;
         },
 
-        get resource()
+        get node()
         {
-                return this._resource;
+               return this._node;
         },
 
         set parent(parent)
@@ -88,19 +89,19 @@ nsMyPortalBookmarkNode.prototype =
 
         get id()
         {
-                if (this._resource instanceof nsIRDFResource) {
-                        return this._resource.Value;
-                }
+//                if (this._resource instanceof nsIRDFResource) {
+//                        return this._resource.Value;
+//                }
                 return null;
         },
 
         get name()
         {
-                var rdfName = this._rdfService.rdfResource('name');
-                var target = this._bookmarksDataSource.GetTarget(this._resource, rdfName, true);
-                if (target instanceof nsIRDFLiteral) {
-                        return target.Value;
-                }
+                // var rdfName = this._rdfService.rdfResource('name');
+                // var target = this._bookmarksDataSource.GetTarget(this._resource, rdfName, true);
+                // if (target instanceof nsIRDFLiteral) {
+                        // return target.Value;
+                // }
 
                 var stringBundleService = Components.classes['@mozilla.org/intl/stringbundle;1'].getService(nsIStringBundleService);
                 var stringBundle = stringBundleService.createBundle('chrome://myportal/locale/myportal.properties');
@@ -109,68 +110,69 @@ nsMyPortalBookmarkNode.prototype =
 
         get url()
         {
-                var rdfURL = this._rdfService.rdfResource('url');
-                var target = this._bookmarksDataSource.GetTarget(this._resource, rdfURL, true);
-                if (target instanceof nsIRDFLiteral) {
-                        return target.Value;
-                }
+                // var rdfURL = this._rdfService.rdfResource('url');
+                // var target = this._bookmarksDataSource.GetTarget(this._resource, rdfURL, true);
+                // if (target instanceof nsIRDFLiteral) {
+                        // return target.Value;
+                // }
                 return '';
         },
 
         get description()
         {
-                var rdfDescription = this._rdfService.rdfResource('description');
-                var target = this._bookmarksDataSource.GetTarget(this._resource, rdfDescription, true);
-                if (target instanceof nsIRDFLiteral) {
-                        return target.Value;
-                }
+                // var rdfDescription = this._rdfService.rdfResource('description');
+                // var target = this._bookmarksDataSource.GetTarget(this._resource, rdfDescription, true);
+                // if (target instanceof nsIRDFLiteral) {
+                        // return target.Value;
+                // }
                 return null;
         },
 
         get icon()
         {
-                var rdfIcon = this._rdfService.rdfResource('icon');
-                var target = this._bookmarksDataSource.GetTarget(this._resource, rdfIcon, true);
-                if (target instanceof nsIRDFLiteral) {
-                        return target.Value;
-                }
+                // var rdfIcon = this._rdfService.rdfResource('icon');
+                // var target = this._bookmarksDataSource.GetTarget(this._resource, rdfIcon, true);
+                // if (target instanceof nsIRDFLiteral) {
+                        // return target.Value;
+                // }
                 return null;
         },
 
         get lastVisitDate()
         {
-                var rdfLastVisitDate = this._rdfService.rdfResource('lastVisitDate');
-                var target = this._bookmarksDataSource.GetTarget(this._resource, rdfLastVisitDate, true);
-                if (target instanceof nsIRDFDate) {
-                        return target.Value;
-                }
+                // var rdfLastVisitDate = this._rdfService.rdfResource('lastVisitDate');
+                // var target = this._bookmarksDataSource.GetTarget(this._resource, rdfLastVisitDate, true);
+                // if (target instanceof nsIRDFDate) {
+                        // return target.Value;
+                // }
                 return null;
         },
 
         get historyDate()
         {
-                var url = this.url;
-                if (url) {
-                        var resource = rdfService.GetResource(url);
-                        var rdfDate = this._rdfService.rdfResource('date');
-                        var target = this._historyDataSource.GetTarget(resource, rdfDate, true);
-                        if (target instanceof nsIRDFDate) {
-                                return target.Value;
-                        }
-                }
+                // var url = this.url;
+                // if (url) {
+                        // var resource = rdfService.GetResource(url);
+                        // var rdfDate = this._rdfService.rdfResource('date');
+                        // var target = this._historyDataSource.GetTarget(resource, rdfDate, true);
+                        // if (target instanceof nsIRDFDate) {
+                                // return target.Value;
+                        // }
+                // }
                 return null;
         },
 
         get path()
         {
-                var node = this;
-                const separator = '/';
-                var path = separator + encodeURIComponent(node.name);
-                while (node.parent) {
-                        path = separator + encodeURIComponent(node.parent.name) + path;
-                        node = node.parent;
-                }
-                return path;
+                // var node = this;
+                // const separator = '/';
+                // var path = separator + encodeURIComponent(node.name);
+                // while (node.parent) {
+                        // path = separator + encodeURIComponent(node.parent.name) + path;
+                        // node = node.parent;
+                // }
+                //return path;
+				return null;
         },
 
         isRoot: function()

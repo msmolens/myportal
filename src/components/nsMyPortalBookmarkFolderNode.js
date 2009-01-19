@@ -103,14 +103,14 @@ nsMyPortalBookmarkFolderNode.prototype =
 
         //// nsIMyPortalBookmarkNode methods
 
-        set resource(resource)
+        set node(node)
         {
-                this._base.QueryInterface(nsIMyPortalBookmarkNode).resource = resource;
+                this._base.QueryInterface(nsIMyPortalBookmarkNode).node = node;
         },
 
-        get resource()
+        get node()
         {
-                return this._base.QueryInterface(nsIMyPortalBookmarkNode).resource;
+                return this._base.QueryInterface(nsIMyPortalBookmarkNode).node;
         },
 
         set parent(parent)

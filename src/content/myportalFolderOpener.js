@@ -96,6 +96,8 @@ MyPortalFolderOpener.prototype =
         confirmOpen: function(numURLs,
                               openFolderLimit)
         {
+                // TODO investigate similar PlacesUIUtils function
+        
                 const promptAlwaysPrompt = 'open.confirm';
                 var promptTitle = this.stringBundle.formatStringFromName(this.promptTitleKey, [numURLs], 1);
                 var promptMessage = this.stringBundle.formatStringFromName(this.promptMessageKey, [numURLs], 1);

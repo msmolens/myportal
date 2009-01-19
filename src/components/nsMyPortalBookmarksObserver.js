@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
  */
+ 
+ Components.utils.import("resource://gre/modules/utils.js");
 
 //// Component constants
 
@@ -35,8 +37,9 @@ const nsIMyPortalRDFService = Components.interfaces.nsIMyPortalRDFService;
 const nsIFactory = Components.interfaces.nsIFactory;
 const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
 const nsITimer = Components.interfaces.nsITimer;
-const nsIRDFObserver = Components.interfaces.nsIRDFObserver;
+//const nsIRDFObserver = Components.interfaces.nsIRDFObserver;
 const nsIObserverService = Components.interfaces.nsIObserverService;
+const nsINavBookmarkObserver = Components.interfaces.nsINavBookmarkObserver;
 
 
 //// My Portal Notification List
@@ -232,62 +235,42 @@ myportalUpdateNotifier.prototype =
 
 //// nsMyPortalBookmarksObserver
 // Implements:
-// nsIRDFObserver
+// nsINavBookmarkObserver
 // nsISupports
 
 function nsMyPortalBookmarksObserver()
 {
+        this._batch = false;
+
         this.observerService = Components.classes['@mozilla.org/observer-service;1'].getService(nsIObserverService);
 
         // Get notification topics
         var topicService = Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(nsIMyPortalNotificationTopicService);
         var bookmarksObserverNotifyTopic = topicService.topic('bookmarksObserverNotify');
-        var bookmarksObserverUpdatedTopic = topicService.topic('bookmarksObserverUpdated');
-        var bookmarksObserverStructureUpdatedTopic = topicService.topic('bookmarksObserverStructureUpdated');
-        var livemarkUpdateEndedTopic = topicService.topic('livemarkUpdateEnded');
-
-        // Get RDF resources
-        var rdfService = Components.classes['@unroutable.org/myportal-rdf-service;1'].getService(nsIMyPortalRDFService);
-        this.rdfID = rdfService.rdfResource('id');
-        this.rdfName = rdfService.rdfResource('name');
-        this.rdfURL = rdfService.rdfResource('url');
-        this.rdfDescription = rdfService.rdfResource('description');
-        this.rdfIcon = rdfService.rdfResource('icon');
-        this.rdfLastVisitDate = rdfService.rdfResource('lastVisitDate');
-        this.rdfLastModifiedDate = rdfService.rdfResource('lastModifiedDate');
-        this.rdfLivemarkExpiration = rdfService.rdfResource('livemarkExpiration');
-
-        // Base RDF structure predicate
-        var rdfNS = rdfService.namespace('rdf');
-        this.rdfPredicate = rdfNS.substr(0, rdfNS.length - 1);
+        this.bookmarksObserverUpdatedTopic = topicService.topic('bookmarksObserverUpdated');
+        this.bookmarksObserverStructureUpdatedTopic = topicService.topic('bookmarksObserverStructureUpdated');
+        //var livemarkUpdateEndedTopic = topicService.topic('livemarkUpdateEnded');
+        this.livemarkUpdateEndedTopic = topicService.topic('livemarkUpdateEnded');
+        
 
         // Create notification timer
-        this.notificationTimer = new myportalNotificationTimer(bookmarksObserverNotifyTopic);
+   //     this.notificationTimer = new myportalNotificationTimer(bookmarksObserverNotifyTopic);
 
         // Create notification lists
-        this.updatedRDFStructureIds = new myportalNotificationList(bookmarksObserverStructureUpdatedTopic);
-        this.updatedLivemarkIds = new myportalNotificationList(livemarkUpdateEndedTopic);
+  //      this.updatedLivemarkIds = new myportalNotificationList(livemarkUpdateEndedTopic);
 
         // Add notification lists to timer
-        this.notificationTimer.addNotificationList(this.updatedRDFStructureIds);
-        this.notificationTimer.addNotificationList(this.updatedLivemarkIds);
+   //     this.notificationTimer.addNotificationList(this.updatedLivemarkIds);
 
         // Create update notifier
-        this.updatedQueue = new myportalUpdateNotifier(bookmarksObserverUpdatedTopic);
+//        this.updatedQueue = new myportalUpdateNotifier(bookmarksObserverUpdatedTopic);
 }
 
 nsMyPortalBookmarksObserver.prototype =
 {
-        // Returns true if a predicate is a bookmark attribute.
-        //
-        // predicate: RDF predicate
         _isBookmarkAttribute: function(predicate)
         {
-                return (predicate == this.rdfLastVisitDate ||
-                        predicate == this.rdfName ||
-                        predicate == this.rdfURL ||
-                        predicate == this.rdfDescription ||
-                        predicate == this.rdfID);
+                return false;
         },
 
         //// nsIMyPortalBookmarksObserver methods
@@ -297,9 +280,79 @@ nsMyPortalBookmarksObserver.prototype =
         // delay: delay in ms
         setDelay: function(delay)
         {
-                this.notificationTimer.setDelay(delay);
+//                this.notificationTimer.setDelay(delay);
+        },
+        
+        //// nsINavBookmarkObserver methods
+        onBeginUpdateBatch: function()
+        {
+                dump('begin batch\n');
+                this._batch = true;
+        },
+        
+        onEndUpdateBatch: function()
+        {
+                dump('end batch\n');
+                this._batch = false;
+
+                //
+                // Force refresh
+                //
+
+//                this.notificationTimer.flush();
+
+                // var topicService = Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(nsIMyPortalNotificationTopicService);
+                // var forceRefreshTopic = topicService.topic('forceRefresh');
+
+                // this.observerService.notifyObservers(this, forceRefreshTopic, null);
+        },
+        
+        onItemAdded: function(aItemId, aFolder, aIndex)
+        {
+                // TODO
+        },
+        
+        onItemRemoved: function(aItemId, aFolder, aIndex)
+        {
+                // TODO
+        },
+        
+        onItemChanged: function(aBookmarkId, aProperty, aIsAnnotationProperty, aValue)
+        {
+                if (this._batch) {
+                        dump('skip in batch\n');
+                        return;
+                }
+
+                dump("changed: " + aBookmarkId + ", " + aProperty + ", "  + aIsAnnotationProperty + ", " + aValue + "\n");
+
+                if (aProperty) {
+                        var idx = aProperty.indexOf('/');
+                        if (idx > -1 ) {
+                                var prefix = aProperty.substr(0, idx);
+                                if ("livemark" == prefix) {
+                                        this.observerService.notifyObservers(this, this.livemarkUpdateEndedTopic, aBookmarkId);
+                                }
+                        } else {
+                                this.observerService.notifyObservers(this, this.bookmarksObserverUpdatedTopic, aBookmarkId);
+                        }
+                }
+        },
+        
+        onItemVisited: function(aBookmarkId, aVisitID, time)
+        {
+                // TODO?
+                dump('visited: ' + aBookmarkId + ", " + aVisitID + ", " + time + "\n");
         },
 
+        onItemMoved: function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex)
+        {
+                dump('moved: ' + aItemId + ", " + aOldParent + ", " + aOldIndex + ", " + aNewParent + ", " + aNewIndex + "\n");
+                this.observerService.notifyObservers(this, this.bookmarksObserverStructureUpdatedTopic, aOldParent);
+                if (aOldParent != aNewParent) {
+                        this.observerService.notifyObservers(this, this.bookmarksObserverStructureUpdatedTopic, aNewParent);
+                }
+        },
 
         //// nsIRDFObserver methods
 
@@ -312,12 +365,6 @@ nsMyPortalBookmarksObserver.prototype =
 
                         // Bookmark attribute changed
                         this.updatedQueue.pushBegin(source.Value);
-                } else if (predicate == this.rdfLivemarkExpiration) {
-
-                        // Livemark update ended
-                        this.updatedLivemarkIds.add(source.Value);
-                        this.updatedRDFStructureIds.remove(source.Value);
-                        this.notificationTimer.reset();
                 } else if (predicate == this.rdfLastModifiedDate) {
 
                         // Last modified date added
@@ -330,14 +377,6 @@ nsMyPortalBookmarksObserver.prototype =
                         // Force update, because updating favicon doesn't update last modified date
                         this.updatedQueue.pushBegin(source.Value);
                         if (this.updatedQueue.pushEnd(source.Value)) {
-                                this.notificationTimer.reset();
-                        }
-                } else {
-                        var splitPredicate = predicate.Value.split('#');
-                        if (splitPredicate[0] == this.rdfPredicate) {
-
-                                // RDF structure changed
-                                this.updatedRDFStructureIds.add(source.Value);
                                 this.notificationTimer.reset();
                         }
                 }
@@ -360,11 +399,6 @@ nsMyPortalBookmarksObserver.prototype =
                         if (this.updatedQueue.pushEnd(source.Value)) {
                                 this.notificationTimer.reset();
                         }
-                } else if (predicate.Value.split('#')[0] == this.rdfPredicate) {
-
-                        // RDF structure changed
-                        this.updatedRDFStructureIds.add(source.Value);
-                        this.notificationTimer.reset();
                 }
         },
 
@@ -378,15 +412,6 @@ nsMyPortalBookmarksObserver.prototype =
 
                         // Bookmark attribute changed
                         this.updatedQueue.pushBegin(source.Value);
-                } else if (predicate == this.rdfLivemarkExpiration) {
-
-                        // Livemark update ended
-                        this.updatedLivemarkIds.add(source.Value);
-
-                        // Avoid updating livemarks twice
-                        this.updatedRDFStructureIds.remove(source.Value);
-
-                        this.notificationTimer.reset();
                 } else if (predicate == this.rdfLastModifiedDate) {
 
                         // Last modified date changed
@@ -404,35 +429,12 @@ nsMyPortalBookmarksObserver.prototype =
                 }
         },
 
-        onMove: function(ds,
-                         oldSource,
-                         newSource,
-                         predicate,
-                         target) {},
-
-        onBeginUpdateBatch: function(ds) {},
-
-        onEndUpdateBatch: function(ds) {
-
-                //
-                // Force refresh
-                //
-
-                this.notificationTimer.flush();
-
-                var topicService = Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(nsIMyPortalNotificationTopicService);
-                var forceRefreshTopic = topicService.topic('forceRefresh');
-
-                this.observerService.notifyObservers(this, forceRefreshTopic, null);
-        },
-
-
         //// nsISupports methods
 
         QueryInterface: function(iid)
         {
                 if (!iid.equals(nsIMyPortalBookmarksObserver) &&
-                    !iid.equals(nsIRDFObserver) &&
+                    !iid.equals(nsINavBookmarkObserver) &&
                     !iid.equals(nsISupports)) {
                             throw Components.results.NS_ERROR_NO_INTERFACE;
                     }
