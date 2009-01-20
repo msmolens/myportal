@@ -69,7 +69,6 @@ function nsMyPortalNotificationTopicService()
 
         this.topics = new HashTable;
         this.topics['bookmarkUpdated'] = Prefix + 'bookmark-updated';
-        this.topics['bookmarksObserverNotify'] = Prefix + 'bookmarksobserver-notify';
         this.topics['bookmarksObserverUpdated'] = Prefix + 'bookmarksobserver-updated';
         this.topics['bookmarksObserverStructureUpdated'] = Prefix + 'bookmarksobserver-structure-updated';
         this.topics['bookmarkStructureUpdated'] = Prefix + 'bookmark-structure-updated';
