@@ -32,7 +32,6 @@ const MYPORTALSERVICE_CID = Components.ID('{34b0eda1-1917-47bd-9143-b6b3a0f2bcca
 
 const nsIMyPortalService = Components.interfaces.nsIMyPortalService;
 const nsIMyPortalDataSource = Components.interfaces.nsIMyPortalDataSource;
-const nsIMyPortalBookmarksObserver = Components.interfaces.nsIMyPortalBookmarksObserver;
 const nsIMyPortalHistoryObserver = Components.interfaces.nsIMyPortalHistoryObserver;
 const nsIMyPortalNotificationTopicService = Components.interfaces.nsIMyPortalNotificationTopicService;
 const nsIMyPortalBookmarksTree = Components.interfaces.nsIMyPortalBookmarksTree;
@@ -57,6 +56,7 @@ const nsIDOMNode = Components.interfaces.nsIDOMNode;
 const nsIArray = Components.interfaces.nsIArray;
 const nsINavHistoryContainerResultNode = Components.interfaces.nsINavHistoryContainerResultNode;
 const nsINavHistoryResultNode = Components.interfaces.nsINavHistoryResultNode;
+const nsINavBookmarkObserver = Components.interfaces.nsINavBookmarkObserver;
 
 //// Namespace constants
 
@@ -174,8 +174,7 @@ function nsMyPortalService()
 //        this.bookmarksTree = Components.classes['@unroutable.org/myportal-bookmarks-tree;1'].createInstance(nsIMyPortalBookmarksTree);
 
         // Init bookmarks observer
-        this.bookmarksObserver = Components.classes['@unroutable.org/myportal-bookmarks-observer;1'].createInstance(nsIMyPortalBookmarksObserver);
-        this.bookmarksObserver.setDelay(1000);
+        this.bookmarksObserver = Components.classes['@unroutable.org/myportal-bookmarks-observer;1'].createInstance(nsINavBookmarkObserver);
         PlacesUtils.bookmarks.addObserver(this.bookmarksObserver, false);
 
         // Init history observer
@@ -183,7 +182,6 @@ function nsMyPortalService()
 
         // Init notification topics
         var topicService = Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(nsIMyPortalNotificationTopicService);
-        this.bookmarksObserverNotifyTopic = topicService.topic('bookmarksObserverNotify');
         this.bookmarksObserverUpdatedTopic = topicService.topic('bookmarksObserverUpdated');
         this.bookmarksObserverStructureUpdatedTopic = topicService.topic('bookmarksObserverStructureUpdated');
         this.historyObserverUpdatedTopic = topicService.topic('historyObserverUpdated');
@@ -196,7 +194,6 @@ function nsMyPortalService()
         // Observe bookmark changes
 //        this.bookmarksObserver.enable();
 //        this.historyObserver.enable();
-        observerService.addObserver(this, this.bookmarksObserverNotifyTopic, false);
         observerService.addObserver(this, this.bookmarksObserverUpdatedTopic, false);
         observerService.addObserver(this, this.bookmarksObserverStructureUpdatedTopic, false);
         observerService.addObserver(this, this.historyObserverUpdatedTopic, false);
@@ -216,7 +213,6 @@ nsMyPortalService.prototype =
 //                this.bookmarksObserver.disable();
 //                this.historyObserver.disable();
                 this.myportalDataSource.flush();
-                observerService.removeObserver(this, this.bookmarksObserverNotifyTopic);
                 observerService.removeObserver(this, this.bookmarksObserverUpdatedTopic);
                 observerService.removeObserver(this, this.bookmarksObserverStructureUpdatedTopic);
                 observerService.removeObserver(this, this.historyObserverUpdatedTopic);
@@ -868,10 +864,7 @@ nsMyPortalService.prototype =
                           topic,
                           data)
         {
-                if (topic == this.bookmarksObserverNotifyTopic) {
-//                        dump(topic + '\n');
-//                        this.bookmarksTree.dirty = true;
-                } else if (topic == this.bookmarksObserverUpdatedTopic) {
+                if (topic == this.bookmarksObserverUpdatedTopic) {
                         dump(topic + ' ' + data + '\n');
 //                        this.bookmarksTree.dirty = true;
                         if (automaticallyUpdatePortal) {
