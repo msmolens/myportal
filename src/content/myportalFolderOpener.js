@@ -1,5 +1,5 @@
 /* myportalFolderOpener.js
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -60,9 +60,8 @@ MyPortalFolderOpener.prototype =
         // node: clicked DOM node
         open: function(node) {
 
-                // Extract links from folder contents
-                var folderContents = node.parentNode.nextSibling;
-                var urls = this.linkExtractor.extract(folderContents);
+                // Extract URLs of bookmarks in folder
+                var urls = this.linkExtractor.extract(node.id);
 
                 // Confirm if number of URLs is greater than limit
                 var buttonPressed = 0;

@@ -1,5 +1,5 @@
 /* nsMyPortalGeneralBookmarkNode.js
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -62,14 +62,14 @@ nsMyPortalGeneralBookmarkNode.prototype =
 
         //// nsIMyPortalBookmarkNode methods
 
-        set resource(resource)
+        set node(node)
         {
-                this._base.resource = resource;
+                this._base.node = node;
         },
 
-        get resource()
+        get node()
         {
-                return this._base.resource;
+                return this._base.node;
         },
 
         set parent(parent)
@@ -80,51 +80,6 @@ nsMyPortalGeneralBookmarkNode.prototype =
         get parent()
         {
                 return this._base.parent;
-        },
-
-        get id()
-        {
-                return this._base.id;
-        },
-
-        get name()
-        {
-                return this._base.name;
-        },
-
-        get url()
-        {
-                return this._base.url;
-        },
-
-        get description()
-        {
-                return this._base.description;
-        },
-
-        get icon()
-        {
-                return this._base.icon;
-        },
-
-        get lastVisitDate()
-        {
-                return this._base.lastVisitDate;
-        },
-
-        get historyDate()
-        {
-                return this._base.historyDate;
-        },
-
-        get path()
-        {
-                return this._base.path;
-        },
-
-        isRoot: function()
-        {
-                return this._base.isRoot();
         },
 
         //// nsISupports methods

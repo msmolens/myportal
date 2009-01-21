@@ -1,20 +1,29 @@
 <?xml version="1.0"?>
-<RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
-         xmlns:NC="http://home.netscape.com/NC-rdf#"
-         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="urn:mozilla:install-manifest"
-                   em:id="{e957079f-59b4-4dbc-b4b8-34074072c68a}"
-                   em:name="My Portal"
-                   em:version="1.0.7"
-                   em:description="A live web page of your bookmark hierarchy."
-                   em:creator="Max Smolens; smolens@gmail.com"
-                   em:homepageURL="http://myportal.mozdev.org/"
-                   em:optionsURL="chrome://myportal/content/myportalPreferences.xul"
-                   em:iconURL="chrome://myportal/skin/icon32.png">
-    <em:targetApplication RDF:resource="rdf:#$OVI8Q1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$OVI8Q1"
-                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                   em:minVersion="1.5"
-                   em:maxVersion="3.0.*" />
-</RDF:RDF>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+	<Description about="urn:mozilla:install-manifest">
+
+	<em:id>{e957079f-59b4-4dbc-b4b8-34074072c68a}</em:id>
+		<em:version>2.0.0</em:version>
+		<em:type>2</em:type>
+
+		<em:targetApplication>
+			<Description>
+				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+				<em:minVersion>3.5</em:minVersion>
+				<em:maxVersion>3.5.*</em:maxVersion>
+			</Description>
+		</em:targetApplication>
+
+		<em:name>My Portal</em:name>
+		<em:description>A live web page of your bookmark hierarchy.</em:description>
+		<em:creator>Max Smolens; smolens@gmail.com</em:creator>
+		<em:iconURL>chrome://myportal/skin/icon32.png</em:iconURL>
+		<em:homepageURL>http://myportal.mozdev.org/</em:homepageURL>
+		<em:optionsURL>chrome://myportal/content/myportalPreferences.xul</em:optionsURL>
+
+	</Description>
+
+</RDF>

@@ -1,5 +1,5 @@
 /* nsMyPortalNotificationTopicService.js
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -73,7 +73,6 @@ function nsMyPortalNotificationTopicService()
         this.topics['bookmarksObserverStructureUpdated'] = Prefix + 'bookmarksobserver-structure-updated';
         this.topics['bookmarkStructureUpdated'] = Prefix + 'bookmark-structure-updated';
         this.topics['forceRefresh'] = Prefix + 'force-refresh';
-        this.topics['historyObserverUpdated'] = Prefix + 'historyobserver-updated';
         this.topics['livemarkUpdateEnded'] = Prefix + 'livemark-update-ended';
         this.topics['livemarkUpdateEndedNoFade'] = Prefix + 'livemark-update-ended-nofade';
         this.topics['shutdown'] = 'xpcom-shutdown';

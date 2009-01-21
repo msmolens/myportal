@@ -1,5 +1,5 @@
 /* nsMyPortalDataSource.js
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -50,13 +50,13 @@ const nsIProperties = Components.interfaces.nsIProperties;
 
 function nsMyPortalDataSource()
 {
-//        this.rdfService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(nsIRDFService);
-//       this._open();
+       this.rdfService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(nsIRDFService);
+      this._open();
 }
 
 nsMyPortalDataSource.prototype =
 {
-//        filename: 'myportal.rdf',
+       filename: 'myportal.rdf',
 
         // Get profile path.
         _getProfilePath: function()
@@ -70,32 +70,32 @@ nsMyPortalDataSource.prototype =
         _getURL: function()
         {
                 // Create file
- //               var file = this._getProfilePath();
- //               file.append(this.filename);
- //               if (!file.exists()) {
- //                       file.create(nsILocalFile.NORMAL_FILE_TYPE, 0664);
- //               }
+                var file = this._getProfilePath();
+                file.append(this.filename);
+                if (!file.exists()) {
+                        file.create(nsILocalFile.NORMAL_FILE_TYPE, 0664);
+                }
 
                 // Get file URL
- //               var ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(nsIIOService);
- //               var fileHandler = ioService.getProtocolHandler('file').QueryInterface(nsIFileProtocolHandler);
- //               var url = fileHandler.getURLSpecFromFile(file);
- //               return url;
+                var ioService = Components.classes['@mozilla.org/network/io-service;1'].getService(nsIIOService);
+                var fileHandler = ioService.getProtocolHandler('file').QueryInterface(nsIFileProtocolHandler);
+                var url = fileHandler.getURLSpecFromFile(file);
+                return url;
         },
 
         // Open datasource.
         _open: function()
         {
- //               var url = this._getURL();
- //               this.ds = this.rdfService.GetDataSourceBlocking(url);
- //               this.collapsedContainer = Components.classes['@mozilla.org/rdf/container;1'].createInstance(nsIRDFContainer);
+                var url = this._getURL();
+                this.ds = this.rdfService.GetDataSourceBlocking(url);
+                this.collapsedContainer = Components.classes['@mozilla.org/rdf/container;1'].createInstance(nsIRDFContainer);
 
- //               var rdfService = Components.classes['@unroutable.org/myportal-rdf-service;1'].getService(nsIMyPortalRDFService);
- //               var collapsedRoot = rdfService.rdfResource('myportalCollapsedRoot');
+                var rdfService = Components.classes['@unroutable.org/myportal-rdf-service;1'].getService(nsIMyPortalRDFService);
+                var collapsedRoot = rdfService.rdfResource('myportalCollapsedRoot');
 
- //               var containerUtils = Components.classes['@mozilla.org/rdf/container-utils;1'].getService(nsIRDFContainerUtils);
- //               containerUtils.MakeBag(this.ds, collapsedRoot);
- //               this.collapsedContainer.Init(this.ds, collapsedRoot);
+                var containerUtils = Components.classes['@mozilla.org/rdf/container-utils;1'].getService(nsIRDFContainerUtils);
+                containerUtils.MakeBag(this.ds, collapsedRoot);
+                this.collapsedContainer.Init(this.ds, collapsedRoot);
         },
 
         // Check if a container contains a node.
@@ -105,7 +105,7 @@ nsMyPortalDataSource.prototype =
         _contains: function(container,
                             node)
         {
- //               return (-1 != container.IndexOf(node));
+                return (-1 != container.IndexOf(node));
         },
 
         // Insert a node into a container.
@@ -115,7 +115,7 @@ nsMyPortalDataSource.prototype =
         _insert: function(container,
                           node)
         {
-  //              container.AppendElement(node);
+                container.AppendElement(node);
         },
 
         // Remove a node from a container.
@@ -125,7 +125,7 @@ nsMyPortalDataSource.prototype =
         _remove: function(container,
                           node)
         {
- //               container.RemoveElement(node, true);
+                container.RemoveElement(node, true);
         },
 
 
@@ -134,8 +134,8 @@ nsMyPortalDataSource.prototype =
         // Flush the datasource to disk.
         flush: function()
         {
- //               this.ds.QueryInterface(nsIRDFRemoteDataSource);
- //               this.ds.Flush();
+                this.ds.QueryInterface(nsIRDFRemoteDataSource);
+                this.ds.Flush();
         },
 
         // Check if a bookmark folder is collapsed.
@@ -143,8 +143,8 @@ nsMyPortalDataSource.prototype =
         // nodeId: the bookmark folder id
         isCollapsed: function(nodeId)
         {
- //               var node = this.rdfService.GetLiteral(nodeId);
- //               return this._contains(this.collapsedContainer, node);
+                var node = this.rdfService.GetLiteral(nodeId);
+                return this._contains(this.collapsedContainer, node);
         },
 
         // Sets a bookmark folder's collapsed state.
@@ -154,17 +154,17 @@ nsMyPortalDataSource.prototype =
         setCollapsed: function(nodeId,
                                collapsed)
         {
- //               var node = this.rdfService.GetLiteral(nodeId);
- //               var exists = this._contains(this.collapsedContainer, node);
- //               if (collapsed) {
- //                       if (!exists) {
- //                               this._insert(this.collapsedContainer, node);
- //                       }
-  //              } else {
-   //                     if (exists) {
- //                               this._remove(this.collapsedContainer, node);
- //                       }
- //               }
+                var node = this.rdfService.GetLiteral(nodeId);
+                var exists = this._contains(this.collapsedContainer, node);
+                if (collapsed) {
+                        if (!exists) {
+                                this._insert(this.collapsedContainer, node);
+                        }
+                } else {
+                        if (exists) {
+                                this._remove(this.collapsedContainer, node);
+                        }
+                }
         },
 
 

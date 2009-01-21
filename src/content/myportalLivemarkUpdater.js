@@ -1,5 +1,5 @@
 /* myportalLivemarkUpdater.js
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
  */
+ 
+ Components.utils.import("resource://gre/modules/utils.js");
 
 //// My Portal Livemark Updater.
 // Implements:
@@ -125,7 +127,7 @@ MyPortalLivemarkUpdater.prototype =
         // node: clicked DOM node
         markLivemarkAsRead: function(node)
         {
-                var id = node.getAttribute('nodeId');
+                var id = this.getNodeId(node);
                 this.myportalService.markLivemarkAsRead(id);
         },
 
@@ -146,8 +148,27 @@ MyPortalLivemarkUpdater.prototype =
                 }
 
                 // Refresh livemark
-                var id = node.getAttribute('nodeId');
-                this.myportalService.refreshLivemark(id);
+                var livemarkService = PlacesUtils.livemarks;
+                var id = this.getNodeId(node);
+                livemarkService.reloadLivemarkFolder(id);
+        },
+
+        // Gets a node's associated bookmark item id
+        //
+        // node: a DOM node
+        getNodeId: function(node)
+        {
+                var id = node.id;
+                while (!id && (node.previousSibling || node.parentNode)) {
+                        if (node.previousSibling) {
+                                node = node.previousSibling;
+                        } else {
+                                node = node.parentNode;
+                        }
+                        id = node.id;
+                }
+                id = parseInt(id);
+                return isNaN(id) ? null : id;
         },
 
 

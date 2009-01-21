@@ -1,5 +1,5 @@
 /* nsMyPortalPreferencesService.js
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *

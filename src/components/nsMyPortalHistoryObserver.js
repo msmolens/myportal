@@ -1,5 +1,5 @@
 /* nsMyPortalHistoryObserver.js
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA
  */
+ 
+Components.utils.import("resource://gre/modules/utils.js");
 
 //// Component constants
 
@@ -31,104 +33,99 @@ const MYPORTALHISTORYOBSERVER_CID = Components.ID('{3763a620-ec2b-4619-b30c-a677
 const nsISupports = Components.interfaces.nsISupports;
 const nsIMyPortalHistoryObserver = Components.interfaces.nsIMyPortalHistoryObserver;
 const nsIMyPortalNotificationTopicService = Components.interfaces.nsIMyPortalNotificationTopicService;
-const nsIMyPortalRDFService = Components.interfaces.nsIMyPortalRDFService;
 const nsIFactory = Components.interfaces.nsIFactory;
 const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
-const nsITimer = Components.interfaces.nsITimer;
-const nsIRDFObserver = Components.interfaces.nsIRDFObserver;
 const nsIObserverService = Components.interfaces.nsIObserverService;
+const nsINavHistoryObserver = Components.interfaces.nsINavHistoryObserver;
 
 
 //// My Portal History Observer
 // Implements:
 // nsIMyPortalHistoryObserver
-// nsIRDFObserver
+// nsINavHistoryObserver
 // nsISupports
 
 // Constructor.
 function nsMyPortalHistoryObserver()
 {
+        this._batch = false;
+
         // Init services
         this.observerService = Components.classes['@mozilla.org/observer-service;1'].getService(nsIObserverService);
+        this.bookmarks = PlacesUtils.bookmarks;
 
         // Get notification topics
         var topicService = Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(nsIMyPortalNotificationTopicService);
-
-        this.historyObserverUpdatedTopic = topicService.topic('historyObserverUpdated');
-
-        // Get RDF resources
-        var rdfService = Components.classes['@unroutable.org/myportal-rdf-service;1'].getService(nsIMyPortalRDFService);
-        this.rdfHistoryRoot = rdfService.rdfResource('historyRoot');
-        this.rdfDate = rdfService.rdfResource('date');
-        this.rdfChild = rdfService.rdfResource('child');
+        this.bookmarkUpdatedTopic = topicService.topic('bookmarkUpdated');
+        this.forceRefreshTopic = topicService.topic('forceRefresh');
 }
 
 nsMyPortalHistoryObserver.prototype =
 {
-        // Notify observers with a URL.
-        //
-        // url: URL
-        notify: function(url)
+        notify: function(uri)
         {
-                this.observerService.notifyObservers(this, this.historyObserverUpdatedTopic, url);
+                // TODO getBookmarkedURIFor?
+                var ids = this.bookmarks.getBookmarkIdsForURI(uri, {});
+                ids.forEach(function(id) {
+                        this.observerService.notifyObservers(this, this.bookmarkUpdatedTopic, id);
+                }, this);
         },
 
+        //// nsINavHistoryObserver methods
 
-        //// nsIRDFObserver methods
-
-        onAssert: function(ds,
-                           source,
-                           predicate,
-                           target)
+        onBeginUpdateBatch: function()
         {
-                // URL's date added
-                if (predicate == this.rdfDate) {
-                        this.notify(source.Value);
+                this._batch = true;
+        },
+        
+        onClearHistory: function()
+        {
+                this.observerService.notifyObservers(this, this.forceRefreshTopic, null);
+        },
+        
+        onDeleteURI: function(aURI)
+        {
+                this.notify(aURI);
+        },
+        
+        onEndUpdateBatch: function()
+        {
+                this._batch = false;
+        },
+        
+        onPageChanged: function(aURI, aWhat, aValue)
+        {
+        },
+        
+        onPageExpired: function(aURI, aVisitTime, aWholeEntry)
+        {
+                if (this._batch) {
+                        return;
                 }
-        },
-
-        onUnassert: function(ds,
-                             source,
-                             predicate,
-                             target)
-        {
-                // URL removed from history
-                if ((source == this.rdfHistoryRoot) && (predicate == this.rdfChild)) {
-                        if (target instanceof nsIRDFResource) {
-                                this.notify(target.Value);
-                        }
+                if (!aWholeEntry) {
+                        return;
                 }
+                this.notify(aURI.spec);
         },
-
-        onChange: function(ds,
-                           source,
-                           predicate,
-                           oldTarget,
-                           newTarget)
+        
+        onTitleChanged: function(aURI, aPageTitle)
         {
-                // URL's date changed
-                if (predicate == this.rdfDate) {
-                        this.notify(source.Value);
-                }
         },
-
-        onMove: function(ds,
-                         oldSource,
-                         newSource,
-                         predicate,
-                         target) {},
-
-        onBeginUpdateBatch: function(ds) {},
-
-        onEndUpdateBatch: function(ds) {},
-
+        
+        onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID, aTransitionType)
+        {
+                if (this._batch) {
+                        return;
+                }
+                this.notify(aURI);
+        },
 
         //// nsISupports methods
 
         QueryInterface: function(iid)
         {
                 if (!iid.equals(nsIMyPortalHistoryObserver) &&
-                    !iid.equals(nsIRDFObserver) &&
+                    !iid.equals(nsINavHistoryObserver) &&
                     !iid.equals(nsISupports)) {
                             throw Components.results.NS_ERROR_NO_INTERFACE;
                     }

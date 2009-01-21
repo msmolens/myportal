@@ -1,5 +1,5 @@
 /* nsIMyPortalBookmarkNode.idl
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -27,7 +27,7 @@ interface nsINavHistoryResultNode;
 interface nsIMyPortalBookmarkNode : nsISupports
 {
         /**
-         * TODO.
+         * History result node corresponding to this node.
          */
         attribute nsINavHistoryResultNode node;
 
@@ -35,51 +35,4 @@ interface nsIMyPortalBookmarkNode : nsISupports
          * Parent node.
          */
         attribute nsIMyPortalBookmarkNode parent;
-
-        /**
-         * Node resource's id.
-         */
-        readonly attribute ACString id;
-
-        /**
-         * Node resource's name.
-         */
-        readonly attribute wstring name;
-
-        /**
-         * Node resource's url.
-         */
-        readonly attribute wstring url;
-
-        /**
-         * Node resource's description.
-         */
-        readonly attribute wstring description;
-
-        /**
-         * Node resource's icon.
-         */
-        readonly attribute wstring icon;
-
-        /**
-         * Node resource's last visit date.
-         */
-        readonly attribute long long lastVisitDate;
-
-        /**
-         * Most recent visit date for node resource's URL.
-         */
-        readonly attribute long long historyDate;
-
-        /**
-         * Full path.
-         */
-        readonly attribute wstring path;
-
-        /**
-         * Query whether the node is the root node.
-         *
-         * @return true if the node is the root node
-         */
-        boolean isRoot();
 };

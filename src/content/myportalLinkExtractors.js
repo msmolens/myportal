@@ -1,5 +1,5 @@
 /* myportalLinkExtractors.js
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -28,33 +28,32 @@ function MyPortalLinkExtractor() {}
 
 // Returns array of links in node.
 //
-// node: folder contents DOM node
-MyPortalLinkExtractor.prototype.extract = function(node)
+// itemId: bookmark item id
+MyPortalLinkExtractor.prototype.extract = function(itemId)
 {
         var urls = new Array();
-        var children = node.childNodes;
-        var url;
-        try {
-                for (var i = 0; i < children.length; i++) {
-                        var child = children[i];
-                        if (child.tagName == 'A') {
-                                // Bookmark
-                                url = child.href;
-                                urls.push(url);
-                        } else if (child.tagName == 'SPAN') {
-                                // Bookmark w/image
-                                url = child.lastChild.href;
-                                urls.push(url);
-                        } else if (child.tagName == 'DIV' &&
-                                   child.firstChild &&
-                                   child.firstChild.tagName == 'FORM') {
-                                // Smart bookmark
-                                var input = child.firstChild.firstChild.firstChild;
-                                url = input.getAttribute('url');
-                                urls.push(url);
-                        }
+
+        var historyService = PlacesUtils.history;
+        var options = historyService.getNewQueryOptions();
+        var query = historyService.getNewQuery();
+ 
+        query.setFolders([itemId], 1);
+
+        var result = historyService.executeQuery(query, options);
+        var rootNode = result.root;
+        
+        rootNode.containerOpen = true;
+
+        for (var i = 0; i < rootNode.childCount; i++) {
+                let childNode = rootNode.getChild(i);
+                let type = childNode.type;
+                if (Components.interfaces.nsINavHistoryResultNode.RESULT_TYPE_URI == type) {
+                        urls.push(childNode.uri);
                 }
-        } catch (e) {}
+         }
+
+        rootNode.containerOpen = false;
+        
         return urls;
 };
 
@@ -74,10 +73,10 @@ MyPortalUnreadLinkExtractor.prototype.ioService = Components.classes['@mozilla.o
 
 // Returns array of links in node.
 //
-// node: folder contents DOM node
-MyPortalUnreadLinkExtractor.prototype.extract = function(node)
+// itemId: bookmark item id
+MyPortalUnreadLinkExtractor.prototype.extract = function(itemId)
 {
-        var allURLs = this.constructor.prototype.extract.call(this, node);
+        var allURLs = this.constructor.prototype.extract.call(this, itemId);
         var unreadURLs = allURLs.filter(function(url) {
                 return !this.isVisited(url);
         }, this);

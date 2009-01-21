@@ -1,5 +1,5 @@
 /* myportalSavedTextboxValues.js
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -35,6 +35,20 @@ function MyPortalSavedTextboxValues(node)
 
 MyPortalSavedTextboxValues.prototype =
 {
+        // Replacement for range.intersectsNode() from MDC
+        rangeIntersectsNode: function(node)
+        {
+                var nodeRange = node.ownerDocument.createRange();
+                try {
+                        nodeRange.selectNode(node);
+                } catch (e) {
+                        nodeRange.selectNodeContents(node);
+                }
+                
+                return this.range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
+                        this.range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
+        },
+
         // Saves values from all textboxes in subtree
         save: function()
         {
@@ -45,7 +59,7 @@ MyPortalSavedTextboxValues.prototype =
                 var input = null;
                 for (var i = 0; i < inputs.length; i++) {
                         input = inputs.item(i);
-                        if (this.range.intersectsNode(input) && input.value) {
+                        if (this.rangeIntersectsNode(input) && input.value) {
                                 this.values[input.id] = input.value;
                         }
                 }

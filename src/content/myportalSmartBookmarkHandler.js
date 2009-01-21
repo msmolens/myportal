@@ -1,5 +1,5 @@
 /* myportalSmartBookmarkHandler.js
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -29,10 +29,9 @@ function MyPortalSmartBookmarkHandler() {}
 MyPortalSmartBookmarkHandler.prototype =
 {
         // Callback for button press to load smart bookmark.
-        load: function(event)
+        load: function(event, itemId)
         {
-                var textboxId = event.target.getAttribute('textboxId');
-                return this.submit(textboxId, event);
+                return this.submit(itemId, event);
         },
 
         // Simulates smart bookmark's form submission by adding the search value and browsing to the URL.
@@ -56,24 +55,17 @@ MyPortalSmartBookmarkHandler.prototype =
                 } else if (event.type == 'click' && event.button == 1) {
                         // Middle click: load in new tab
                         event.stopPropagation();
-                        this.browser.addTab(url);
+                        this.openInNewTab(url);
                 }
                 return true;
         },
-
-
-        //// Getter methods
-
-        // Returns browser.
-        // Newsgroups: netscape.public.mozilla.xpfe
-        // Subject: Re: getting the _real_ top window
-        // Date: Tue, 15 Jun 2004 16:31:34 +0100
-        // Message-ID: <can4op$kub1@ripley.netscape.com>
-        get browser()
+        
+        openInNewTab: function(url)
         {
-                return (window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                        getInterface(Components.interfaces.nsIWebNavigation).QueryInterface(Components.interfaces.nsIDocShellTreeItem).
-                        rootTreeItem.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow).
-                        getBrowser());
+                var fuelApp = Components.classes["@mozilla.org/fuel/application;1"].getService(Components.interfaces.fuelIApplication);
+                var window = fuelApp.activeWindow;
+                var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+                var uri = ioService.newURI(url, null, null);
+                window.open(uri);
         }
 };

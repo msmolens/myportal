@@ -1,5 +1,5 @@
 /* myportalFadeTimer.js
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *

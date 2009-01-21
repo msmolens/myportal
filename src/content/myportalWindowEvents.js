@@ -1,5 +1,5 @@
 /* myportalWindowEvents.js
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -27,12 +27,6 @@
 
 var myportalWindowEvents =
 {
-        //// Services
-
-        myportalService: Components.classes['@unroutable.org/myportal-service;1'].getService(Components.interfaces.nsIMyPortalService),
-        observerService: Components.classes['@mozilla.org/observer-service;1'].getService(Components.interfaces.nsIObserverService),
-
-
         //// Popup menu methods
 
         load: function(event)
@@ -68,7 +62,6 @@ var myportalWindowEvents =
                 // Clicked DOM node
                 var node = document.popupNode;
                 
-
                 // Create list of open folder menuitems
                 var openFolderMenuItems = new MenuItems();
                 openFolderMenuItems.push(document.getElementById('myportalOpenFolderInTabs'));
@@ -91,34 +84,91 @@ var myportalWindowEvents =
                 livemarkLocationMenuItems.push(document.getElementById('myportalOpenLivemarkLocationInWindow'));
                 livemarkLocationMenuItems.push(document.getElementById('myportalOpenLivemarkLocationInTab'));
                 
-                // TODO maybe look up node type by id directly
-
-                // Determine clicked node's type
                 const myportalURL = 'myportal://';
-                var location = getBrowser().contentDocument.location.href;
+                var fuelApp = Components.classes["@mozilla.org/fuel/application;1"].getService(Components.interfaces.fuelIApplication);
+                var window = fuelApp.activeWindow;
+                var tab = window.activeTab;
+                var location = tab.uri.spec;
                 var isMyPortal = (location.substr(0, myportalURL.length) == myportalURL);
-                var isLink = (node.nodeName == 'A');
+                
+                var isLink = false;
+                var isFolder = false;
+                var isLivemark = false;
+                var isLivemarkWithLocation = false;
+                var isLivemarkLink = false;
+                var isSmartBookmark = false;
+                var isBookmark = false;
+                var isBookmarksRoot = false;
+                
+                if (isMyPortal) {
+                        // Get bookmark item id
+                        let id = myportalWindowEvents.getNodeId(node);
+                        if (id) {
+                        
+                                // Get item type
+                                let bookmarksService = PlacesUtils.bookmarks;
+                                let itemType = bookmarksService.getItemType(id);
+                                if (Components.interfaces.nsINavBookmarksService.TYPE_BOOKMARK == itemType) {
+                                        isLink = true;
 
-                // True if clicked folder's title link
-                var isFolder = isMyPortal && myportalWindowEvents.isFolderHeadingLink(node);
+                                        let folderId = bookmarksService.getFolderIdForItem(id);
 
-                // True if clicked livemark's title link or icon
-                var isLivemark = isMyPortal && myportalWindowEvents.isLivemark(node);
+                                        let historyService = PlacesUtils.history;
+                                        let options = historyService.getNewQueryOptions();
+                                        let query = historyService.getNewQuery();
 
-                // True if clicked a livemark that has a location
-                var isLivemarkWithLocation = isLivemark && myportalWindowEvents.isLivemarkWithLocation(node);
+                                        query.setFolders([folderId], 1);
 
-                // True if clicked livemark link
-                var isLivemarkLink = isMyPortal && node.className == 'livemarkLink';
+                                        let result = historyService.executeQuery(query, options);
+                                        let rootNode = result.root;
 
-                // True if clicked smart bookmark's textbox
-                var isSmartBookmark = isMyPortal && (node.nodeName == 'INPUT');
+                                        rootNode.containerOpen = true;
 
-                // True if clicked node represents any type of bookmark
-                var isBookmark = isFolder || isLivemark || isSmartBookmark || (isMyPortal && isLink);
+                                        let foundNode = null;
+                                        for (var i = 0; i < rootNode.childCount; i++) {
+                                                let childNode = rootNode.getChild(i);
+                                                if (childNode.itemId == id) {
+                                                        foundNode = childNode;
+                                                        break;
+                                                }
+                                        }
 
-                // True if clicked on root
-                var isBookmarksRoot = isMyPortal && node.id == 'NC:BookmarksRoot';
+                                        rootNode.containerOpen = false;
+
+                                        if (foundNode) {
+                                                isLivemarkLink = PlacesUtils.nodeIsLivemarkItem(foundNode);
+                                                if (!isLivemarkLink) {
+                                                        isSmartBookmark = /%s/.test(foundNode.uri);
+                                                }
+                                        }
+                                } else if (Components.interfaces.nsINavBookmarksService.TYPE_FOLDER == itemType) {
+                                        isFolder = true;
+
+                                        // True if clicked on root folder
+                                        isBookmarksRoot = id == PlacesUtils.bookmarksMenuFolderId;
+
+                                        // Check for livemark folder
+                                        if (!isBookmarksRoot) {
+                                                let historyService = PlacesUtils.history;
+                                                let options = historyService.getNewQueryOptions();
+                                                let query = historyService.getNewQuery();
+
+                                                query.setFolders([id], 1);
+
+                                                let result = historyService.executeQuery(query, options);
+                                                let rootNode = result.root;
+                                                
+                                                isLivemark = PlacesUtils.nodeIsLivemarkContainer(rootNode);
+                                                if (isLivemark) {
+                                                        isLivemarkWithLocation = PlacesUtils.annotations.itemHasAnnotation(id, "livemark/siteURI");
+                                                }
+                                        }
+                                }
+                                
+                                // True if clicked node represents any type of bookmark
+                                isBookmark = isFolder || isLivemark || isSmartBookmark || isLink;
+                        }
+                }
 
                 // Set menuitem visibility
                 livemarkMenuItems.setVisible(isLivemark);
@@ -127,7 +177,7 @@ var myportalWindowEvents =
                 openUnreadMenuItems.setVisible(isFolder && isLivemark);
 
                 // When clicked on bookmark, set 'Properties' menu item to open bookmark properties
-                // Don't show bookmark properties when clicked on livemark link or NC:BookmarksRoot
+                // Don't show bookmark properties when clicked on livemark link or bookmarks menu folder
                 var propertiesMenuItem = document.getElementById('context-metadata');
                 var bookmarkPropertiesMenuItem = document.getElementById('myportalBookmarkProperties');
                 
@@ -135,33 +185,6 @@ var myportalWindowEvents =
                 propertiesMenuItem.hidden = showBookmarkProperties;
                 bookmarkPropertiesMenuItem.hidden = !showBookmarkProperties;
         },
-
-        // Returns true if node is a folder heading link.
-        isFolderHeadingLink: function(node)
-        {
-                const folderHeadingLinkAttribute = 'folderHeadingLink';
-                return ((node.hasAttribute(folderHeadingLinkAttribute)) &&
-                        (node.getAttribute(folderHeadingLinkAttribute) == 'true'));
-        },
-
-        // Returns true if node is livemark's title link or icon.
-        isLivemark: function(node)
-        {
-                const livemarkAttribute = 'livemark';
-                return ((node.hasAttribute(livemarkAttribute)) &&
-                        (node.getAttribute(livemarkAttribute) == 'true'));
-        },
-
-        // Returns true if node has a URL.
-        isLivemarkWithLocation: function(node)
-        {
-                return false;
-                // FIXME
-                var id = this.getNodeId(node);
-                var url = this.myportalService.getURLForId(id);
-                return (url != '');
-        },
-
 
         //// Livemark methods
 
@@ -190,8 +213,8 @@ var myportalWindowEvents =
         _openLivemarkLocation: function(node, opener)
         {
                 var id = this.getNodeId(node);
-                var url = this.myportalService.getURLForId(id);
-                opener.open(url);
+                var siteURI = PlacesUtils.annotations.getItemAnnotation(id, "livemark/siteURI");
+                opener.open(siteURI);
         },
 
         // Marks livemark's contents as read.
@@ -199,8 +222,9 @@ var myportalWindowEvents =
         // node: clicked DOM node
         markLivemarkAsRead: function(node)
         {
+                var myportalService = Components.classes['@unroutable.org/myportal-service;1'].getService(Components.interfaces.nsIMyPortalService);
                 var id = this.getNodeId(node);
-                this.myportalService.markLivemarkAsRead(id);
+                myportalService.markLivemarkAsRead(id);
         },
 
         // Marks livemark's contents as unread.
@@ -208,8 +232,9 @@ var myportalWindowEvents =
         // node: clicked DOM node
         markLivemarkAsUnread: function(node)
         {
+                var myportalService = Components.classes['@unroutable.org/myportal-service;1'].getService(Components.interfaces.nsIMyPortalService);
                 var id = this.getNodeId(node);
-                this.myportalService.markLivemarkAsUnread(id);
+                myportalService.markLivemarkAsUnread(id);
         },
 
         // Livemark refresh click handler.
@@ -229,8 +254,9 @@ var myportalWindowEvents =
                 }
 
                 // Refresh livemark
+                var livemarkService = PlacesUtils.livemarks;
                 var id = this.getNodeId(node);
-                this.myportalService.refreshLivemark(id);
+                livemarkService.reloadLivemarkFolder(id);
         },
 
 
@@ -283,21 +309,24 @@ var myportalWindowEvents =
 
         //// Miscellaneous methods
 
-        // Gets a node's id from its own or its parent's 'id' or 'nodeId' attribute.
+        // Gets a node's associated bookmark item id
         //
         // node: a DOM node
         getNodeId: function(node)
         {
                 var id = node.id;
-                if (!id) {
-                        if (node.hasAttribute('nodeId')) {
-                                id = node.getAttribute('nodeId');
-                        } else {
-                                // Link with favicon
-                                id = node.parentNode.id;
-                       }
+                let (node = node) {
+                        while (!id && (node.previousSibling || node.parentNode)) {
+                                if (node.previousSibling) {
+                                        node = node.previousSibling;
+                                } else {
+                                        node = node.parentNode;
+                                }
+                                id = node.id;
+                        }
                 }
-                return id;
+                id = parseInt(id);
+                return isNaN(id) ? null : id;
         },
 
         // Opens bookmark properties dialog.
@@ -309,7 +338,6 @@ var myportalWindowEvents =
                 var id = this.getNodeId(node);
                 var type = "";
                 var itemType = bookmarksService.getItemType(id);
-                dump(itemType + '\n');
                 switch (itemType) {
                         case Components.interfaces.nsINavBookmarksService.TYPE_BOOKMARK:
                                 type = "bookmark";

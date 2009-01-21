@@ -1,5 +1,5 @@
 /* nsMyPortalBookmarkContainerNode.js
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -78,104 +78,6 @@ nsMyPortalBookmarkContainerNode.prototype =
                 return (this._children.length == 0);
         },
 
-        findById: function(id)
-        {
-                if (id == this.id) {
-                        return this;
-                }
-
-                var node = null;
-                var it = this._children.enumerate();
-                while (!node && it.hasMoreElements()) {
-                        let child = it.getNext();
-                        if (child instanceof nsIMyPortalBookmarkNode) {
-                                if (id == child.id) {
-                                        node = child;
-                                } else {
-                                        if (child instanceof nsIMyPortalBookmarkContainerNode) {
-                                                node = child.findById(id);
-                                        }
-                                }
-                        }
-                }
-                return node;
-        },
-
-        // TODO findByIds
-
-        findByURL: function(url)
-        {
-                var array = Components.classes['@mozilla.org/array;1'].createInstance(nsIMutableArray);
-
-                var it = this._children.enumerate();
-                while (it.hasMoreElements()) {
-                        var child = it.getNext();
-                        if (child instanceof nsIMyPortalBookmarkContainerNode) {
-                                let newArray = child.findByURL(url);
-                                let childIt = newArray.enumerate();
-                                while (childIt.hasMoreElements()) {
-                                        let elem = childIt.getNext();
-                                        array.appendElement(elem, false);
-                                }
-                        } else if (url == child.url) {
-                                array.appendElement(child, false);
-                        }
-                }
-                return array;
-        },
-
-        findFolderById: function(id)
-        {
-                if (id == this.id) {
-                        return this;
-                }
-
-                var node = null;
-                var it = this._children.enumerate();
-                while (!node && it.hasMoreElements()) {
-                        var child = it.getNext();
-                        if (child instanceof nsIMyPortalBookmarkContainerNode) {
-                                node = child.findFolderById(id);
-                        }
-                }
-                return node;
-        },
-
-        findFolderByPath: function(path)
-        {
-                if (path == null) {
-                        return null;
-                }
-                const separator = '/';
-
-                // Remove trailing slash
-                if (path[path.length - 1] == separator) {
-                        path = path.substr(0, path.length - 1);
-                }
-                var pathArray = path.split(separator);
-                var searchName = pathArray[0];
-
-                var node = null;
-                if (decodeURIComponent(searchName) == this.name) {
-                        if (pathArray.length == 1) {
-                                // Found folder
-                                node = this;
-                        } else {
-                                // Recurse on child folders
-                                if (this._children) {
-                                        var it = this._children.enumerate();
-                                        while (!node && it.hasMoreElements()) {
-                                                var child = it.getNext();
-                                                if (child instanceof nsIMyPortalBookmarkContainerNode) {
-                                                        node = child.findFolderByPath(pathArray.slice(1).join(separator));
-                                                }
-                                        }
-                                }
-                        }
-                }
-                return node;
-        },
-
         //// nsIMyPortalBookmarkNode methods
 
         set node(node)
@@ -196,56 +98,6 @@ nsMyPortalBookmarkContainerNode.prototype =
         get parent()
         {
                 return this._base.parent;
-        },
-
-        get id()
-        {
-                return this._base.id;
-        },
-
-        get name()
-        {
-                return this._base.name;
-        },
-
-        // Returns myportal:// href.
-        get url()
-        {
-                // var href = this.path;
-                // href = href.split('/');
-                // href = href.slice(2).join('/');
-                // return ('myportal://' + href);
-				return null;
-        },
-
-        get description()
-        {
-                return this._base.description;
-        },
-
-        get icon()
-        {
-                return this._base.icon;
-        },
-
-        get lastVisitDate()
-        {
-                return this._base.lastVisitDate;
-        },
-
-        get historyDate()
-        {
-                return this._base.historyDate;
-        },
-
-        get path()
-        {
-                return this._base.path;
-        },
-
-        isRoot: function()
-        {
-                return this._base.isRoot();
         },
 
         //// nsISupports methods

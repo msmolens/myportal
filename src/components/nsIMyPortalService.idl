@@ -1,5 +1,5 @@
 /* nsIMyPortalService.idl
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -32,20 +32,9 @@ interface nsIMyPortalService : nsISupports
         nsIDOMNode updateDOMNode(in nsIDOMNode node,
                                  in string nodeId,
                                  in boolean isPortalRoot);
-        // TODO use nsIArray
-        void updateVisitedLinks(in PRUint32 count,
-                                [array, size_is(count)] in nsIDOMNode links);
         void markLivemarkAsRead(in string nodeId);
         void markLivemarkAsUnread(in string nodeId);
-        void refreshLivemark(in string nodeId);
         string getIdForPath(in string bookmarksPath);
         string getHrefForId(in string nodeId);
-        string getURLForId(in string nodeId);
         void addURL(in string url);
-        void toggleCollapsed(in nsIDOMNode node,
-                             in nsIDOMNode folderNode,
-                             in string nodeId);
-        void setCollapsed(in nsIDOMNode node,
-                          in nsIDOMNode folderNode,
-                          in boolean collapsed);
 };

@@ -1,5 +1,5 @@
 /* nsMyPortalBookmarkFolderNode.js
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -79,28 +79,6 @@ nsMyPortalBookmarkFolderNode.prototype =
                 return this._base.isEmpty();
         },
 
-        findById: function(id)
-        {
-                return this._base.findById(id);
-        },
-
-        // TODO findByIds
-
-        findByURL: function(url)
-        {
-                return this._base.findByURL(url);
-        },
-
-        findFolderById: function(id)
-        {
-                return this._base.findFolderById(id);
-        },
-
-        findFolderByPath: function(path)
-        {
-                return this._base.findFolderByPath(path);
-        },
-
         //// nsIMyPortalBookmarkNode methods
 
         set node(node)
@@ -121,51 +99,6 @@ nsMyPortalBookmarkFolderNode.prototype =
         get parent()
         {
                 return this._base.QueryInterface(nsIMyPortalBookmarkNode).parent;
-        },
-
-        get id()
-        {
-                return this._base.QueryInterface(nsIMyPortalBookmarkNode).id;
-        },
-
-        get name()
-        {
-                return this._base.QueryInterface(nsIMyPortalBookmarkNode).name;
-        },
-
-        get url()
-        {
-                return this._base.QueryInterface(nsIMyPortalBookmarkNode).url;
-        },
-
-        get description()
-        {
-                return this._base.QueryInterface(nsIMyPortalBookmarkNode).description;
-        },
-
-        get icon()
-        {
-                return this._base.QueryInterface(nsIMyPortalBookmarkNode).icon;
-        },
-
-        get lastVisitDate()
-        {
-                return this._base.QueryInterface(nsIMyPortalBookmarkNode).lastVisitDate;
-        },
-
-        get historyDate()
-        {
-                return this._base.QueryInterface(nsIMyPortalBookmarkNode).historyDate;
-        },
-
-        get path()
-        {
-                return this._base.QueryInterface(nsIMyPortalBookmarkNode).path;
-        },
-
-        isRoot: function()
-        {
-                return this._base.QueryInterface(nsIMyPortalBookmarkNode).isRoot();
         },
 
         //// nsISupports methods

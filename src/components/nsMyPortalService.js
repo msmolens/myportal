@@ -1,5 +1,5 @@
 /* nsMyPortalService.js
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -34,7 +34,6 @@ const nsIMyPortalService = Components.interfaces.nsIMyPortalService;
 const nsIMyPortalDataSource = Components.interfaces.nsIMyPortalDataSource;
 const nsIMyPortalHistoryObserver = Components.interfaces.nsIMyPortalHistoryObserver;
 const nsIMyPortalNotificationTopicService = Components.interfaces.nsIMyPortalNotificationTopicService;
-const nsIMyPortalBookmarksTree = Components.interfaces.nsIMyPortalBookmarksTree;
 const nsIMyPortalRenderer = Components.interfaces.nsIMyPortalRenderer;
 const nsIMyPortalVisitable = Components.interfaces.nsIMyPortalVisitable;
 const nsIMyPortalBookmarkNode = Components.interfaces.nsIMyPortalBookmarkNode;
@@ -84,54 +83,6 @@ var increaseRecentlyVisitedSize = null;
 var automaticallyUpdatePortal = null;
 
 
-//// RDF Observer
-
-function RDFObserver()
-{
-        this.enabled = false;
-        this.dataSource = null;
-        this.observer = null;
-}
-
-RDFObserver.prototype =
-{
-        // Set the data source to observe.
-        //
-        // dataSource: nsIRDFDataSource
-        setDataSource: function(dataSource)
-        {
-                this.dataSource = dataSource;
-        },
-
-        // Set the observer.
-        //
-        // observer: nsIRDFObserver
-        setObserver: function(observer)
-        {
-                this.observer = observer;
-        },
-
-        // Enable observation of the data source
-        enable: function()
-        {
-                if (!this.enabled) {
-                        this.dataSource.AddObserver(this.observer);
-                        this.enabled = true;
-                }
-        },
-
-        // Disable observation of the data source
-        disable: function()
-        {
-                if (this.enabled) {
-                        this.dataSource.RemoveObserver(this.observer);
-                        this.enabled = false;
-                }
-        }
-};
-
-
-
 //// nsMyPortalService
 // Implements:
 // nsIMyPortalService
@@ -141,22 +92,12 @@ RDFObserver.prototype =
 // Constructor.
 function nsMyPortalService()
 {
-        // Init bookmarks data source
-//        this.bookmarksDataSource = rdfService.GetDataSource('rdf:bookmarks');
-
-        // Init history data source
- //       this.historyDataSource = rdfService.GetDataSource('rdf:history');
-
         // Init My Portal data source
         this.myportalDataSource = Components.classes['@unroutable.org/myportal-datasource;1'].getService(nsIMyPortalDataSource);
 
         // Init history services
         this.globalHistoryService = Components.classes['@mozilla.org/browser/global-history;2'].getService(nsIGlobalHistory2);
         this.browserHistoryService = this.globalHistoryService.QueryInterface(nsIBrowserHistory);
-
-        // Load bookmarks
-//        var bookmarksService = this.bookmarksDataSource.QueryInterface(nsIBookmarksService);
-//        bookmarksService.readBookmarks();
 
         // Init preferences service
         this.prefs = preferencesService.getBranch('myportal.');
@@ -170,21 +111,18 @@ function nsMyPortalService()
         this.titlePrefix = this.stringBundle.GetStringFromName('title.prefix');
         this.titleFolderNotFound = this.stringBundle.GetStringFromName('title.folderNotFound') ;
 
-        // Init bookmarks tree
-//        this.bookmarksTree = Components.classes['@unroutable.org/myportal-bookmarks-tree;1'].createInstance(nsIMyPortalBookmarksTree);
-
         // Init bookmarks observer
         this.bookmarksObserver = Components.classes['@unroutable.org/myportal-bookmarks-observer;1'].createInstance(nsINavBookmarkObserver);
         PlacesUtils.bookmarks.addObserver(this.bookmarksObserver, false);
 
         // Init history observer
-//        this.initHistoryObserver();
+        this.historyObserver = Components.classes['@unroutable.org/myportal-history-observer;1'].createInstance(nsIMyPortalHistoryObserver);
+        PlacesUtils.history.addObserver(this.historyObserver, false);
 
         // Init notification topics
         var topicService = Components.classes['@unroutable.org/myportal-notification-topic-service;1'].getService(nsIMyPortalNotificationTopicService);
         this.bookmarksObserverUpdatedTopic = topicService.topic('bookmarksObserverUpdated');
         this.bookmarksObserverStructureUpdatedTopic = topicService.topic('bookmarksObserverStructureUpdated');
-        this.historyObserverUpdatedTopic = topicService.topic('historyObserverUpdated');
         this.livemarkUpdateEndedNoFadeTopic = topicService.topic('livemarkUpdateEndedNoFade');
         this.forceRefreshTopic = topicService.topic('forceRefresh');
         this.bookmarkUpdatedTopic = topicService.topic('bookmarkUpdated');
@@ -192,11 +130,8 @@ function nsMyPortalService()
         this.shutdownTopic = topicService.topic('shutdown');
 
         // Observe bookmark changes
-//        this.bookmarksObserver.enable();
-//        this.historyObserver.enable();
         observerService.addObserver(this, this.bookmarksObserverUpdatedTopic, false);
         observerService.addObserver(this, this.bookmarksObserverStructureUpdatedTopic, false);
-        observerService.addObserver(this, this.historyObserverUpdatedTopic, false);
 
         // Observe application quit
         observerService.addObserver(this, this.shutdownTopic, false);
@@ -210,23 +145,13 @@ nsMyPortalService.prototype =
         // Unloads My Portal Service.
         unload: function()
         {
-//                this.bookmarksObserver.disable();
-//                this.historyObserver.disable();
+                PlacesUtils.bookmarks.removeObserver(this.bookmarksObserver);
+                PlacesUtils.history.removeObserver(this.historyObserver);
                 this.myportalDataSource.flush();
                 observerService.removeObserver(this, this.bookmarksObserverUpdatedTopic);
                 observerService.removeObserver(this, this.bookmarksObserverStructureUpdatedTopic);
-                observerService.removeObserver(this, this.historyObserverUpdatedTopic);
                 observerService.removeObserver(this, this.shutdownTopic);
                 this.prefsInternal.removeObserver('', this);
-        },
-
-        initHistoryObserver: function()
-        {
-                // FIXME
-                var observer = Components.classes['@unroutable.org/myportal-history-observer;1'].createInstance(nsIMyPortalHistoryObserver);
-                this.historyObserver = new RDFObserver();
-                this.historyObserver.setDataSource(this.historyDataSource);
-                this.historyObserver.setObserver(observer);
         },
 
 
@@ -261,6 +186,8 @@ nsMyPortalService.prototype =
 				case nsINavHistoryResultNode.RESULT_TYPE_REMOTE_CONTAINER:
 					break;
 				case nsINavHistoryResultNode.RESULT_TYPE_QUERY:	
+                                        dump('query: ' + title + '(' + id + ')\n');
+                                        this.dumpResult(node);
 					break;
 				case nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
 					dump('folder: ' + title + '(' + id + ')\n');
@@ -291,11 +218,14 @@ nsMyPortalService.prototype =
                         case nsINavHistoryResultNode.RESULT_TYPE_URI:
                                 if (PlacesUtils.nodeIsLivemarkItem(rootNode)) {
                                         parentNode = Components.classes['@unroutable.org/myportal-livemark-bookmark-node;1'].createInstance(nsIMyPortalBookmarkNode);
+                                } else if (/%s/.test(rootNode.uri)) {
+                                        parentNode = Components.classes['@unroutable.org/myportal-smart-bookmark-node;1'].createInstance(nsIMyPortalBookmarkNode);
                                 } else {
                                         parentNode = Components.classes['@unroutable.org/myportal-normal-bookmark-node;1'].createInstance(nsIMyPortalBookmarkNode);
                                 }
                                 break;
                         case nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
+//                        case nsINavHistoryResultNode.RESULT_TYPE_QUERY:
                                 parentNode = PlacesUtils.nodeIsLivemarkContainer(rootNode) ?
                                         Components.classes['@unroutable.org/myportal-livemark-node;1'].createInstance(nsIMyPortalBookmarkNode) :
                                         Components.classes['@unroutable.org/myportal-bookmark-folder-node;1'].createInstance(nsIMyPortalBookmarkNode);
@@ -357,18 +287,19 @@ nsMyPortalService.prototype =
                 var rootNode = null;
                 if (validNode) {
                         query.setFolders([nodeId], 1);
+                        options.excludeQueries = true;
                         result = historyService.executeQuery(query, options);
                         rootNode = result.root;
                 }
 //		this.dumpResult(rootNode);
-                
+
                 var node = this.buildTree(rootNode);
                 if (node instanceof nsIMyPortalVisitable &&
                         document instanceof nsIDOMDocument &&
                         documentFragment instanceof nsIDOMNode) {
 
                                 // TODO refactor
-                                var renderer = Components.classes['@unroutable.org/myportal-renderer;1'].createInstance(nsIMyPortalRenderer);
+                                let renderer = Components.classes['@unroutable.org/myportal-renderer;1'].createInstance(nsIMyPortalRenderer);
                                 document = document.QueryInterface(nsIDOMDocument);
                                 documentFragment = documentFragment.QueryInterface(nsIDOMNode);
                                 renderer.init(document, documentFragment, true);
@@ -453,58 +384,6 @@ nsMyPortalService.prototype =
                 }
 
                 return documentFragment;
-        },
-
-        // Re-renders links an array of links.
-        // My Portal calls this occasionally to age links.
-        //
-        // This is an optimization to avoid excessive bookmarks tree
-        // searches; My Portal could call updateDOMNode for each link
-        // instead.
-        //
-        // count: array size (required by xpidl)
-        // links: array of DOM links
-        updateVisitedLinks: function(count,
-                                     links)
-        {
-                if (increaseRecentlyVisitedSize && links.length) {
-
-                        // Store (DOM link, BookmarkNode) pairs indexed by id
-                        var nodes = new Object();
-                        links.forEach(function(link) {
-                                nodes[link.id] = {link: link,
-                                                  node: null};
-                        });
-
-                        // Populate node field
-                        // TODO
-//                        this.bookmarksTree.findByIds(nodes);
-
-                        // Use document from first link
-                        var document = links[0].ownerDocument;
-                        var documentFragment = document.createDocumentFragment();
-
-                        // Re-render links
-                        var obj = null;
-                        for (var id in nodes) {
-                                obj = nodes[id];
-                                if (obj.node) {
-
-                                        // TODO refactor
-                                        var renderer = Components.classes['@unroutable.org/myportal-renderer;1'].createInstance(nsIMyPortalRenderer);
-                                        renderer.init(document, documentFragment, false);
-                                        obj.node.accept(renderer);
-
-                                        // New link is documentFragment's first child
-                                        obj.link.parentNode.replaceChild(documentFragment.firstChild, obj.link);
-
-                                        // Clear documentFragment
-                                        while (documentFragment.hasChildNodes()){
-                                                documentFragment.removeChild(documentFragment.firstChild);
-                                        }
-                                }
-                        }
-                }
         },
 
         // Returns an error message that says the folder cannot be found.
@@ -611,76 +490,61 @@ nsMyPortalService.prototype =
 
                 // Redraw
                 observerService.notifyObservers(this, this.livemarkUpdateEndedNoFadeTopic, nodeId);
-},
-
-        // Refreshes a livemark.
-        // Adapted from browser/components/content/bookmarks.js
-        //
-        // nodeId: livemark id
-        refreshLivemark: function(nodeId)
-        {
-                var livemarkService = PlacesUtils.livemarks;
-                livemarkService.reloadLivemarkFolder(nodeId);
         },
 
-
+        
         //// Bookmark information methods
 		
-		getIdForPath_: function(bookmarksPath, folderNode)
-		{
-			if (!(folderNode instanceof nsINavHistoryContainerResultNode)) {
-				return;
-			}
+        getIdForPath_: function(bookmarksPath, folderNode)
+        {
+                if (!(folderNode instanceof nsINavHistoryContainerResultNode)) {
+                        return;
+                }
+                
+                var name;
+                var idx = bookmarksPath.indexOf("/");
+                if (idx >= 0) {
+                        // Decode top folder name
+                        name = decodeURIComponent(bookmarksPath.substr(0, idx));
+                        
+                        // Strip top folder name from path
+                        if (idx < bookmarksPath.length) {
+                                bookmarksPath = bookmarksPath.substr(idx+1);
+                        }
+                } else {
+                        // Leaf
+                        name = decodeURIComponent(bookmarksPath);
+                        bookmarksPath = "";
+                }
+                
+                if (name.length == 0) {
+                        return folderNode.itemId;
+                }
+                
+                var folderId = -1;
 
-			var name;
-			var idx = bookmarksPath.indexOf("/");
-			if (idx >= 0) {
-			
-				// Decode top folder name
-				name = decodeURIComponent(bookmarksPath.substr(0, idx));
-				
-				// Strip top folder name from path
-				if (idx < bookmarksPath.length) {
-					bookmarksPath = bookmarksPath.substr(idx+1);
-				}
-			} else {
+                folderNode.containerOpen = true;
 
-				// Leaf
-				name = bookmarksPath;
-				bookmarksPath = "";
-			}
-			
-			//dump('> ' + name + '--' + bookmarksPath + '\n');
-			
-			if (name.length == 0) {
-				return folderNode.itemId;
-			}
-			
-			var folderId = -1;
+                for (var i = 0; i < folderNode.childCount; i++) {
+                        var node = folderNode.getChild(i);
+                        if (nsINavHistoryResultNode.RESULT_TYPE_FOLDER == node.type)
+                        {
+                                if (node.title == name) {
+                                        // Recurse
+                                        var id = this.getIdForPath_(bookmarksPath, node);
+                                        if (id > -1) {
+                                                folderId = id;
+                                        }
+                                        
+                                        break;
+                                }
+                        }
+                }
+                
+                folderNode.containerOpen = false;
 
-			folderNode.containerOpen = true;
-
-            for (var i = 0; i < folderNode.childCount; i++) {
-                var node = folderNode.getChild(i);
-				if (nsINavHistoryResultNode.RESULT_TYPE_FOLDER == node.type)
-				{
-					if (node.title == name) {
-
-						// Recurse
-						var id = this.getIdForPath_(bookmarksPath, node);
-						if (id > -1) {
-							folderId = id;
-						}
-						
-						break;
-					}
-				}
-            }
-			
-			folderNode.containerOpen = false;
-
-			return folderId;
-		},
+                return folderId;
+        },
 
         // Returns id of deepest folder in path.
         //
@@ -701,33 +565,25 @@ nsMyPortalService.prototype =
                 return id;
         },
 
-        // Returns href for a bookmark folder.
+        // Returns myportal:// href for a bookmark folder.
         //
         // nodeId: bookmark folder id
         getHrefForId: function(nodeId)
         {
-                var node = this.bookmarksTree.findFolderById(nodeId);
-                return node.href;
-        },
+                // Get full path of node
+                var names = [];
+                var bookmarks = PlacesUtils.bookmarks;
+                var bookmarksMenuFolderId = PlacesUtils.bookmarksMenuFolderId;
+                var id = nodeId;
+                while (id != bookmarksMenuFolderId) {
+                        var title = bookmarks.getItemTitle(id);
+                        names.push(encodeURIComponent(title));
 
-        // Returns URL for a bookmark.
-        //
-        // nodeId: bookmark id
-        getURLForId: function(nodeId)
-        {
-                // TODO remove function?
-                var bookmarksService = PlacesUtils.bookmarks;
-                var id = parseInt(nodeId);
-                var uri = bookmarksService.getBookmarkURI(id);
-                return uri.spec;
-        },
-
-        // Returns list of bookmarks with a particular URL.
-        //
-        // url: bookmark URL
-        getIdsForURL: function(url)
-        {
-                return this.bookmarksTree.findByURL(url);
+                        id = bookmarks.getFolderIdForItem(id);
+                }
+                names.reverse();
+                var href = 'myportal://' + names.join('/');
+                return href;
         },
 
 
@@ -753,49 +609,6 @@ nsMyPortalService.prototype =
                 this.browserHistoryService.removePage(uri);
         },
 
-
-        //// GUI methods
-
-        // Toggles a bookmark folder's collapsed state.
-        //
-        // This looks at the actual folder node that was clicked
-        // instead of simply querying the data source, because
-        // multiple myportal:// pages open simultaneously can display
-        // a different collapsed state for the same folder.  The most
-        // recently toggled state is saved in the data source.
-        //
-        // node: clicked node
-        // folderNode: bookmark folder node
-        // nodeId: bookmark folder id
-        toggleCollapsed: function(node, folderNode, nodeId)
-        {
-                var collapsed = this.isCollapsed(folderNode);
-                this.setCollapsed(node, folderNode, !collapsed);
-                this.myportalDataSource.setCollapsed(nodeId, !collapsed);
-        },
-
-        // Returns true if a bookmark folder is collapsed.
-        //
-        // node: bookmark folder node
-        isCollapsed: function(node)
-        {
-                var display = node.style.display;
-                var collapsed = display && display == 'none';
-                return collapsed;
-        },
-
-        // Sets a bookmark folder's collapsed state.
-        //
-        // node: clicked node
-        // folderNode: bookmark folder node
-        // collapsed: collapsed state
-        setCollapsed: function(node,
-                               folderNode,
-                               collapsed)
-        {
-                node.setAttribute('collapsed', collapsed ? 'true': 'false');
-                folderNode.style.display = collapsed ? 'none' : 'block';
-        },
 
         //// Preference methods
 
@@ -865,35 +678,14 @@ nsMyPortalService.prototype =
                           data)
         {
                 if (topic == this.bookmarksObserverUpdatedTopic) {
-                        dump(topic + ' ' + data + '\n');
-//                        this.bookmarksTree.dirty = true;
                         if (automaticallyUpdatePortal) {
                                 // data: id
                                 observerService.notifyObservers(this, this.bookmarkUpdatedTopic, data);
                         }
                 } else if (topic == this.bookmarksObserverStructureUpdatedTopic) {
-                        dump(topic + '\n');
- //                       this.bookmarksTree.dirty = true;
                         if (automaticallyUpdatePortal) {
                                 // data: id
                                 observerService.notifyObservers(this, this.bookmarkStructureUpdatedTopic, data);
-                        }
-                } else if (topic == this.historyObserverUpdatedTopic) {
-                        // data: URL
-                        let nodes = this.getIdsForURL(data);
-                        if (nodes) {
-                                let it = nodes.enumerate();
-                                if (it.hasMoreElements()) {
-                                        // TODO necessary?
-//                                        this.bookmarksTree.dirty = true;
-                                        do {
-                                                let node = it.getNext();
-                                                if (node instanceof nsIMyPortalBookmarkNode) {
-                                                        dump('notify: ' + node.id +'\n');
-                                                        observerService.notifyObservers(this, this.bookmarkUpdatedTopic, node.id);
-                                                }
-                                        } while (it.hasMoreElements());
-                                }
                         }
                 } else if (topic == 'nsPref:changed') {
                         // data: preference name

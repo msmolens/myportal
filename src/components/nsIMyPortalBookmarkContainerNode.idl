@@ -1,5 +1,5 @@
 /* nsIMyPortalBookmarkContainerNode.idl
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -42,52 +42,4 @@ interface nsIMyPortalBookmarkContainerNode : nsISupports
          * TODO
          */
         boolean isEmpty();
-
-        /**
-         * Find node in subtree with specified id.
-         *
-         * @param id the id of the node to find
-         *
-         * @return the found node, or null
-         */
-        nsIMyPortalBookmarkNode findById(in ACString id);
-
-        /**
-         * TODO
-         * Find nodes with specified ids.
-         *
-         * @param nodes
-         *
-         * @return the found node, or null
-         */
-        // Finds bookmark nodes with specified ids.
-        //
-        // nodes: object with ids as its properties, where each id
-        // refers to an object with a link and node properties
-//        findByIds: function(nodes)
-
-        /**
-         * Find bookmark nodes in subtree with specified URL.
-         *
-         * @param url the bookmark URL
-         *
-         * @return an array of bookmark nodes with the specified URL
-         */
-        nsIArray findByURL(in AUTF8String url);
-
-        /**
-         * Find folder node with specified id.
-         *
-         * @return the found node, or null
-         */
-        nsIMyPortalBookmarkNode findFolderById(in ACString id);
-
-        /**
-         * Find folder node in subtree with specified path.
-         *
-         * @param path URI-encoded path of folder node to find
-         *
-         * @return the found node, or null
-         */
-        nsIMyPortalBookmarkNode findFolderByPath(in AUTF8String path);
 };

@@ -1,5 +1,5 @@
 /* myportalLinkOpeners.js
- * Copyright (C) 2005 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -47,5 +47,9 @@ function MyPortalTabLinkOpener() {}
 // url: URL
 MyPortalTabLinkOpener.prototype.open = function(url)
 {
-        getBrowser().addTab(url);
+        var fuelApp = Components.classes["@mozilla.org/fuel/application;1"].getService(Components.interfaces.fuelIApplication);
+        var window = fuelApp.activeWindow;
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+        var uri = ioService.newURI(url, null, null);
+        window.open(uri);
 };

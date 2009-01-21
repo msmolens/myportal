@@ -1,5 +1,5 @@
 /* nsMyPortalBookmarksObserver.js
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -74,71 +74,60 @@ nsMyPortalBookmarksObserver.prototype =
         //// nsINavBookmarkObserver methods
         onBeginUpdateBatch: function()
         {
-                dump('begin batch\n');
                 this._batch = true;
         },
         
         onEndUpdateBatch: function()
         {
-                dump('end batch\n');
                 this._batch = false;
         },
         
         onItemAdded: function(aItemId, aFolder, aIndex)
         {
                 if (this._batch) {
-                        dump('skip in batch\n');
                         return;
                 }
 
-				dump("added: " + aItemId + ", "  + aFolder + ", " + aIndex + "\n");
-				this._updateParent(aFolder);
+                this._updateParent(aFolder);
         },
         
         onItemRemoved: function(aItemId, aFolder, aIndex)
         {
                 if (this._batch) {
-                        dump('skip in batch\n');
                         return;
                 }
 
-				dump("removed: " + aItemId + ", "  + aFolder + ", " + aIndex + "\n");
-				this._updateParent(aFolder);
+		this._updateParent(aFolder);
         },
         
         onItemChanged: function(aBookmarkId, aProperty, aIsAnnotationProperty, aValue)
         {
                 if (this._batch) {
-                        dump('skip in batch\n');
                         return;
                 }
-
-                dump("changed: " + aBookmarkId + ", " + aProperty + ", "  + aIsAnnotationProperty + ", " + aValue + "\n");
 
                 if (aProperty) {
                         var idx = aProperty.indexOf('/');
                         if (idx > -1 ) {
                                 var prefix = aProperty.substr(0, idx);
-									if ("livemark" == prefix) {
-										this._updateLivemark(aBookmarkId);
+				if ("livemark" == prefix) {
+					this._updateLivemark(aBookmarkId);
                                 }
                         } else {
-								this._updateItem(aBookmarkId);
+				this._updateItem(aBookmarkId);
                         }
                 }
         },
         
         onItemVisited: function(aBookmarkId, aVisitID, time)
         {
-                dump('visited: ' + aBookmarkId + ", " + aVisitID + ", " + time + "\n");
         },
 
         onItemMoved: function(aItemId, aOldParent, aOldIndex, aNewParent, aNewIndex)
         {
-                dump('moved: ' + aItemId + ", " + aOldParent + ", " + aOldIndex + ", " + aNewParent + ", " + aNewIndex + "\n");
-				this._updateParent(aOldParent);
+		this._updateParent(aOldParent);
                 if (aOldParent != aNewParent) {
-						this._updateParent(aNewParent);
+			this._updateParent(aNewParent);
                 }
         },
 

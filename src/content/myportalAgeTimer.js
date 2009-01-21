@@ -1,5 +1,5 @@
 /* myportalAgeTimer.js
- * Copyright (C) 2005-2007 Max Smolens
+ * Copyright (C) 2005-2009 Max Smolens
  *
  * This file is part of My Portal.
  *
@@ -80,7 +80,24 @@ MyPortalAgeTimer.prototype =
                 }
 
                 // Re-render links
-                this.myportalService.updateVisitedLinks(visitedLinks.length, visitedLinks);
+                visitedLinks.forEach(function(link) {
+                        var id = link.id;
+                        var node = link;
+                        while (!id && (node.previousSibling || node.parentNode)) {
+                                if (node.previousSibling) {
+                                        node = node.previousSibling;
+                                } else {
+                                        node = node.parentNode;
+                                }
+                                id = node.id;
+                        }
+                        id = parseInt(id);
+                        if (!isNaN(id)) {
+                                var origNode = link.ownerDocument.getElementById(id);
+                                var newNode = this.myportalService.updateDOMNode(origNode, id, false).firstChild;
+                                origNode.parentNode.replaceChild(newNode, origNode);
+                        }
+                }, this);
         },
 
 
