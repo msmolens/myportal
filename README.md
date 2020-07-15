@@ -9,7 +9,7 @@ The last released version of the extension—1.0.7—added support for Firefox 2
 This Git repository was imported from the original mozdev.org [CVS
 repository](http://www.mozdev.org/source/browse/myportal/).
 
-See the walkthrough archived on the original site: http://myportal.mozdev.org/.
+See the original archived walkthrough: https://web.archive.org/web/20191001111918/http://myportal.mozdev.org/
 
 ## Browser Support
 - Firefox 1.5.0.*
